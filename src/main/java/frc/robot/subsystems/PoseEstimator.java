@@ -37,6 +37,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -172,6 +173,9 @@ public final class PoseEstimator implements Constants.PhotonVision, Constants.Sw
      * @param estimatedPose The estimated pose to guess standard deviations for.
      */
     public Matrix<N3, N1> getVisionEstimationStdDevs(Pose2d estimatedPose) {
+        if (DriverStation.isDisabled()) {
+            return VecBuilder.fill(0.05d, 0.05d, 0.05d);
+        }
         var estStdDevs = singleTagStdDevs;
         var targets = getLatestResult().getTargets();
         int numTags = 0;
