@@ -50,7 +50,10 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
     private PhotonPoseEstimator photonEstimatorFrontRight;
     private PhotonPoseEstimator photonEstimatorRearLeft;
 
+
     private final PhotonCamera notesIndexer;
+    private PhotonPipelineResult lastNoteResult = null;
+    private boolean startTrackingNotes = false;
 
 
     private static VisionModule instance;
@@ -98,6 +101,25 @@ public final class VisionModule implements Constants.PhotonVision, Constants.Swe
 
     public PhotonCamera getNotesIndexerCamera() {
         return notesIndexer;
+    }
+
+    public PhotonPipelineResult getLastNoteResult() {
+        return lastNoteResult;
+    }
+
+    protected void setLastNoteResult(PhotonPipelineResult lastNoteResult) {
+        this.lastNoteResult = lastNoteResult;
+    }
+
+    public boolean isStartTrackingNotes() {
+        return startTrackingNotes;
+    }
+
+    public void setStartTrackingNotes(boolean startTrackingNotes) {
+        this.startTrackingNotes = startTrackingNotes;
+    }
+
+    public void trackPipelineResults() {
     }
 
 }

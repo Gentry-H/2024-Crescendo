@@ -179,9 +179,9 @@ public interface Constants {
         Double NOTES_INDEXER_CAMERA_ANGLE = 74.15d;  // angle from floor
 
         Transform3d ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS =
-                new Transform3d(new Translation3d(0.0d, 0.0d, 0.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
+                new Transform3d(new Translation3d(-10.625d, 10.7d, 10.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
         Transform3d ROBOT_TO_TAG_REAR_LEFT_CAM_POS =
-                new Transform3d(new Translation3d(0.0d, 0.0d, 0.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
+                new Transform3d(new Translation3d(10.625d, -10.7d, 10.0d), new Rotation3d(Math.toRadians(32d), 0d, 0d));
 
         // The layout of the AprilTags on the field
         AprilTagFieldLayout tagLayout =

@@ -63,9 +63,9 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         poseEstimator = PoseEstimator.getInstance();
 
-        rotationPIDController = new PIDController(0.01, 0, 0.001);
+        rotationPIDController = new PIDController(0.04d, 0d, 0.003d);
         rotationPIDController.enableContinuousInput(-180, 180);
-        rotationPIDController.setTolerance(0.3);
+        rotationPIDController.setTolerance(0.1);
 
         // Configure PathPlanner Auto Builder
         AutoBuilder.configureHolonomic(
@@ -280,9 +280,12 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
      */
     public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
         System.out.println(targetAngle.getDegrees());
-        rotationPIDController.reset();
         return MathUtil.clamp(-rotationPIDController.calculate(getHeading().getDegrees() % 360,
-                targetAngle.getDegrees() % 360), -0.3, 0.3);
+                targetAngle.getDegrees() % 360) * 0.1, -0.1, 0.1);
+    }
+
+    public void resetRotationPIDController() {
+        rotationPIDController.reset();
     }
 
     /**
