@@ -8,11 +8,13 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.bluecrew.util.FieldState;
+import frc.lib.bluecrew.util.RobotState;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.subsystems.PoseEstimator;
 
 import java.awt.geom.Line2D;
 
@@ -21,31 +23,31 @@ import static edu.wpi.first.units.Units.*;
 /**
  *
  */
-public class NotePlayerSubsystem extends SubsystemBase implements Constants.NotePlayerConstants, Constants.FieldCoordinates {
+public class NotePlayerSubsystem extends SubsystemBase implements Constants.NotePlayerConstants, Constants.FieldCoordinates, Constants.GameStateConstants {
 
     private IndexerModule indexer = new IndexerModule();
     private IntakeModule intake = new IntakeModule();
     private ArmModule arm = new ArmModule();
     private ShooterModule shooter = new ShooterModule();
 
-    SysIdRoutine sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.4).per(Second.of(1)), Volts.of(5), Second.of(10)),
-            new SysIdRoutine.Mechanism((Measure<Voltage> volts) -> arm.driveVolts(volts),
-                    log -> {
-                log.motor("leftArmMotor")
-                        .voltage(
-                                arm.getLeftMotorVolts()
-                        )
-                        .angularPosition(arm.getPositionRadians())
-                        .angularVelocity(arm.getSpeedRadians().per(Second));
-                log.motor("rightArmMotor")
-                        .voltage(
-                                arm.getRightMotorVolts()
-                        )
-                        .angularPosition(arm.getPositionRadians())
-                        .angularVelocity(arm.getSpeedRadians().per(Second));
-    }, this)
-    );
+//    SysIdRoutine sysIdRoutine = new SysIdRoutine(
+//            new SysIdRoutine.Config(Volts.of(0.4).per(Second.of(1)), Volts.of(5), Second.of(10)),
+//            new SysIdRoutine.Mechanism((Measure<Voltage> volts) -> arm.driveVolts(volts),
+//                    log -> {
+//                        log.motor("leftArmMotor")
+//                                .voltage(
+//                                        arm.getLeftMotorVolts()
+//                                )
+//                                .angularPosition(arm.getPositionRadians())
+//                                .angularVelocity(arm.getSpeedRadians().per(Second));
+//                        log.motor("rightArmMotor")
+//                                .voltage(
+//                                        arm.getRightMotorVolts()
+//                                )
+//                                .angularPosition(arm.getPositionRadians())
+//                                .angularVelocity(arm.getSpeedRadians().per(Second));
+//                    }, this)
+//    );
 
     public NotePlayerSubsystem() {
     }
@@ -57,6 +59,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public ShooterModule getShooter() {
         return shooter;
     }
+
     public IndexerModule getIndexer() {
         return indexer;
     }
@@ -74,7 +77,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
      * Calculate the position of the Shooter Wheels relative to the target
      *
      * @param robotDistance The horizontal distance from the center of the robot to the target
-     * @param angle The angle of the Arm as a {@link Rotation2d}
+     * @param angle         The angle of the Arm as a {@link Rotation2d}
      * @return The position of the shooter as a {@link Translation2d}, X for distance, Y for height above floor
      */
     public Translation2d calculateShooterTargetRelativePosition(double robotDistance, Rotation2d angle) {
@@ -91,8 +94,9 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
     /**
      * Calculates the optimal shooting angle and speed for the apex of the projectile to be at the given coordinates
-     *  - All distances and speeds in meters
-     * @param robotPose The current {@link Pose2d} of the robot in meters
+     * - All distances and speeds in meters
+     *
+     * @param robotPose    The current {@link Pose2d} of the robot in meters
      * @param targetCoords The coordinates of the target as a {@link Translation3d} in meters
      * @return The target speed and angle as a {@link Translation2d} (use the getNorm method for the speed, and the getAngle method for the angle)
      */
@@ -101,7 +105,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         // Get the horizontal distance from the robot to the target
         double robotToTargetDistance = robotPose.getTranslation().getDistance(targetCoords.toTranslation2d());
 
-        // The shooter angle, We tested every angle divisible by five between 45 and 10, 25 gave
+        // The shooter angle, We tested every angle incremented by 0.1 between 1 and 66, 21.7 gave
         // the lowest average number of loops before finding the optimal parameters
         Rotation2d shooterAngle = Rotation2d.fromDegrees(25);
 
@@ -130,8 +134,8 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
             // Adjust the shooter angle according to how for off the distance is.
             // The distance error must be divided by at least 2, any less than that and the
             // angle will end up oscillating too much, the while loop will take to long, and the code will crash.
-            // Tested dividing by every number between 10 and 1, 2.5 was optimal
-            shooterAngle = Rotation2d.fromRadians(shooterAngle.getRadians() * 1 - (distanceError / shooterPose.getX()) / 2.5);
+            // Tested dividing by every number between 10 and 1, 2.61 was optimal with a starting angle of 21.7
+            shooterAngle = Rotation2d.fromRadians(shooterAngle.getRadians() * 1 - (distanceError / shooterPose.getX()) / 2.61);
 
             // Catch the angle going out of bounds.
             if (shooterAngle.getDegrees() >= 90) {
@@ -159,36 +163,57 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 
         /*
             When finding the optimal starting angle and number to divide the distance error by, we started
-            with a 45-degree angle and 10 for the divisor. We then ran tests in batches of 100, with random
-            robot poses, and calculated the average number of times we had to calculate the shooting parameters
-            including the initial calculations before the while loop.
-            It started at an average of about 23 times, changing the initial angle to 25 dropped that to about 21
-            tuning the divisor to 2.5 brought it way down to an average of 3.7 calculations.
-            To be fully sure that there weren't any wierd edge cases, we ran through 50000 (probably overkill)
-            trials from randomly generated robot poses. The maximum number of calculations it ever took was 6
+            with a 1-degree angle and 2 for the divisor. We then ran tests in batches of 300, with random
+            robot poses (X of 4-44, Y of 5-26), and calculated the average number of times we had to calculate the shooting parameters
+            including the initial calculations before the while loop. We automatically tested every combination
+            of angle and divisor (0.1 increment for the angle, 0.01 increment for the divisor), and found the
+            combination that resulted in the lowest average number of loops, and the lowest maximum number of
+            loops. This gave us and angle of 21.7 and a divisor of 2.61, which had a maximum number of calculations
+            of 6, and an average of 3.97
          */
 
         // Return the shooting parameters as a vector in Translation2d form
         return new Translation2d(launchSpeed, shooterAngle);
     }
 
+    /**
+     * Checks whether the stage is between the robot and the target
+     *
+     * @param botPose    The {@link Translation2d} of the robot
+     * @param targetPose The {@link Translation2d} of the target
+     * @return True if the stage is not in the way
+     */
     public boolean hasLineOfSight(Translation2d botPose, Translation2d targetPose) {
         Rotation2d angleToTarget = botPose.minus(targetPose).getAngle();
         Translation2d perpendicularOffset;
         if (botPose.getY() > RED_STAGE_SPEAKER_POINT.getY()) {
-            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER/2, angleToTarget.minus(Rotation2d.fromDegrees(90)));
+            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER / 2, angleToTarget.minus(Rotation2d.fromDegrees(90)));
         } else {
-            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER/2, angleToTarget.plus(Rotation2d.fromDegrees(90)));
+            perpendicularOffset = new Translation2d(GAME_PIECE_NOTE_DIAMETER / 2, angleToTarget.plus(Rotation2d.fromDegrees(90)));
         }
 
         Line2D notePath = new Line2D.Double(botPose.getX() + perpendicularOffset.getX(), botPose.getY() + perpendicularOffset.getY(),
                 targetPose.getX() + perpendicularOffset.getX(), targetPose.getY() + perpendicularOffset.getY());
 
         if (FieldState.getInstance().onRedAlliance()) {
-            return notePath.intersectsLine(RED_STAGE_RIGHT) || notePath.intersectsLine(RED_CENTER_STAGE) || notePath.intersectsLine(RED_STAGE_LEFT);
+            return !(notePath.intersectsLine(RED_STAGE_RIGHT) || notePath.intersectsLine(RED_CENTER_STAGE) || notePath.intersectsLine(RED_STAGE_LEFT));
         } else {
-            return notePath.intersectsLine(BLUE_STAGE_RIGHT) || notePath.intersectsLine(BLUE_CENTER_STAGE) || notePath.intersectsLine(BLUE_STAGE_LEFT);
+            return !(notePath.intersectsLine(BLUE_STAGE_RIGHT) || notePath.intersectsLine(BLUE_CENTER_STAGE) || notePath.intersectsLine(BLUE_STAGE_LEFT));
         }
+    }
+
+    public void setRobotStates() {
+        // TODO: Implement the rest of the logic
+        switch (RobotState.getInstance().getShooterMode()) {
+            case SPEAKER:
+                RobotState.getInstance().setHasSpeakerTarget(
+                        hasLineOfSight(PoseEstimator.getInstance().getPose().getTranslation(),
+                                FieldState.getInstance().onRedAlliance() ? RED_SPEAKER.toTranslation2d() : BLUE_SPEAKER.toTranslation2d()));
+                RobotState.getInstance().setShooterStatus(
+                        (arm.isAtSetPosition() && shooter.targetVelocityReached()) ? ShooterStatus.READY : ShooterStatus.UNREADY);
+        }
+
+        RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
     }
 
     /**
@@ -208,14 +233,17 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     // Commands:
 
     public Command allStop() {
-        return this.run(() -> {intake.stopSpinning(); indexer.stop();});
+        return this.run(() -> {
+            intake.stopSpinning();
+            indexer.stop();
+        });
     }
 
     public Command intakeNote() {
         return ((new RunCommand(() -> intake.spin(0.3))
                 .until(intake::noteInIntake).andThen(
-                new RunCommand(() -> intake.spin(0.15))
-                        .raceWith(pullNoteIntoIndexer())))
+                        new RunCommand(() -> intake.spin(0.15))
+                                .raceWith(pullNoteIntoIndexer())))
         );
     }
 
@@ -261,15 +289,11 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         );
     }
 
-    public Command sysIdQuasiStatic(SysIdRoutine.Direction direction) {
-        return sysIdRoutine.quasistatic(direction);
-    }
-
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return sysIdRoutine.dynamic(direction);
-    }
-
-    public void logArm() {
-
-    }
+//    public Command sysIdQuasiStatic(SysIdRoutine.Direction direction) {
+//        return sysIdRoutine.quasistatic(direction);
+//    }
+//
+//    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+//        return sysIdRoutine.dynamic(direction);
+//    }
 }

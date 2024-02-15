@@ -7,6 +7,8 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -37,8 +39,10 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     private final PoseEstimator poseEstimator;
 
-
     private final Field2d field = new Field2d();
+
+    private final StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("RobotPose", Pose2d.struct).publish();
 
     private final PIDController rotationPIDController;
 
@@ -384,8 +388,9 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         // Correct pose estimate with vision measurements
 //        poseEstimator.updateWithVision();
+        /*
+        posePublisher.set(poseEstimator.getPose());
 
-/*
         SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
         SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
         SmartDashboard.putNumber("Rotation", getHeading().getDegrees());

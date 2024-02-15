@@ -262,7 +262,8 @@ public interface Constants {
         float ARM_MAX_LIMIT = 5.5f;
         float ARM_MIN_LIMIT = -11f;
 
-        double ARM_BALANCE_DEGREES = -0.106 * 360;
+        double ARM_BALANCE_DEGREES = -0.107666 * 360;
+        double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;
 
         double SHOOTER_HORIZONTAL_OFFSET = Units.inchesToMeters(-6);
         double SHOOTER_VERTICAL_OFFSET = Units.inchesToMeters(19.25);
@@ -301,6 +302,17 @@ public interface Constants {
         Line2D RED_STAGE_RIGHT = new Line2D.Double(RED_STAGE_SPEAKER_POINT.getX(), RED_STAGE_SPEAKER_POINT.getY(), RED_STAGE_AMP_POINT.getX(), RED_STAGE_AMP_POINT.getY());
         Line2D RED_CENTER_STAGE = new Line2D.Double(RED_STAGE_AMP_POINT.getX(), RED_STAGE_AMP_POINT.getY(), RED_STAGE_SOURCE_POINT.getX(), RED_STAGE_SOURCE_POINT.getY());
         Line2D RED_STAGE_LEFT = new Line2D.Double(RED_STAGE_SPEAKER_POINT.getX(), RED_STAGE_SPEAKER_POINT.getY(), RED_STAGE_AMP_POINT.getX(), RED_STAGE_AMP_POINT.getY());
+
+        // Speaker coordinates
+        Translation3d BLUE_SPEAKER = new Translation3d(
+                Units.inchesToMeters(-1.5),
+                Units.inchesToMeters(218.42),
+                Units.inchesToMeters(80));
+        Translation3d RED_SPEAKER = new Translation3d(
+                Units.inchesToMeters(652.73),
+                Units.inchesToMeters(218.42),
+                Units.inchesToMeters(80)
+        );
     }
 
     double FIELD_AMP_OPENING_WIDTH = 0.6096;
