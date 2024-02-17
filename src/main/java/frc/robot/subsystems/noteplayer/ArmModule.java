@@ -158,33 +158,33 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public void periodic() {
-        if (setPosition != null) { // TODO: add && !isAtSetPosition()
-            // Calculate feed forward based on angle to counteract gravity
-            double sineScalar = Math.sin(Math.toRadians(getShooterDegrees() - ARM_BALANCE_DEGREES));
-            double feedForward = gravityFF * sineScalar;
-            int pidSlot;
-            double error = setPosition - leftEncoder.getPosition();
-            if (error < 0) {
-                if (sineScalar < 0) pidSlot = 1;
-                else if (sineScalar < 0.5) pidSlot = 3;
-                else pidSlot = 2;
-            } else {
-                if (sineScalar < 0) pidSlot = 3;
-                else if (sineScalar < 0.5) pidSlot = 1;
-                else pidSlot = 0;
-            }
-
-            leftController.setReference(setPosition,
-                    CANSparkBase.ControlType.kPosition, pidSlot, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
-        }
+//        if (setPosition != null) { // TODO: add && !isAtSetPosition()
+//            // Calculate feed forward based on angle to counteract gravity
+//            double sineScalar = Math.sin(Math.toRadians(getShooterDegrees() - ARM_BALANCE_DEGREES));
+//            double feedForward = gravityFF * sineScalar;
+//            int pidSlot;
+//            double error = setPosition - leftEncoder.getPosition();
+//            if (error < 0) {
+//                if (sineScalar < 0) pidSlot = 1;
+//                else if (sineScalar < 0.5) pidSlot = 3;
+//                else pidSlot = 2;
+//            } else {
+//                if (sineScalar < 0) pidSlot = 3;
+//                else if (sineScalar < 0.5) pidSlot = 1;
+//                else pidSlot = 0;
+//            }
+//
+//            leftController.setReference(setPosition,
+//                    CANSparkBase.ControlType.kPosition, pidSlot, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
+//        }
 
         // Calculate feed forward based on angle to counteract gravity
-//        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
-//        double feedForward = gravityFF * sineScalar;
+        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
+        double feedForward = gravityFF * sineScalar;
 //        if ((percentOut < 0 && leftEncoder.getPosition() > pseudoBottomLimit) || (percentOut > 0 && leftEncoder.getPosition() < pseudoTopLimit)) {
 //            leftMotor.set(percentOut + feedForward);
 //        } else {
-//            leftMotor.set(feedForward);
+            leftMotor.set(feedForward);
 //        }
 //        if (RobotState.isDisabled()) {
 //            resetMotorEncoderToAbsolute();
