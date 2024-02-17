@@ -107,23 +107,33 @@ public class ArmModule implements Constants.NotePlayerConstants {
 
     private void configureMotors() {
 
-
-        double p = 0.2;
-        double i = 0.0;
-        double d = 0.3;
-        double iZ = 0.0;
-        // Output range
-        double maxOutput = 0.48;
-        double minOutput = -0.48;
-
         leftMotor.restoreFactoryDefaults();
         rightMotor.restoreFactoryDefaults();
 
-        leftController.setP(p);
-        leftController.setI(i);
-        leftController.setD(d);
-        leftController.setIZone(iZ);
-        leftController.setOutputRange(minOutput, maxOutput);
+        // PID Control loop parameters:
+        leftController.setP(ArmUpwardsHighGravityPID.p, 0);
+        leftController.setI(ArmUpwardsHighGravityPID.i, 0);
+        leftController.setD(ArmUpwardsHighGravityPID.d, 0);
+        leftController.setIZone(ArmUpwardsHighGravityPID.iZ, 0);
+        leftController.setOutputRange(ArmUpwardsHighGravityPID.minOutput, ArmUpwardsHighGravityPID.maxOutput, 0);
+
+        leftController.setP(ArmUpwardsLowGravityPID.p, 1);
+        leftController.setI(ArmUpwardsLowGravityPID.i, 1);
+        leftController.setD(ArmUpwardsLowGravityPID.d, 1);
+        leftController.setIZone(ArmUpwardsLowGravityPID.iZ, 1);
+        leftController.setOutputRange(ArmUpwardsLowGravityPID.minOutput, ArmUpwardsLowGravityPID.maxOutput, 1);
+
+        leftController.setP(ArmDownwardsHighGravityPID.p, 2);
+        leftController.setI(ArmDownwardsHighGravityPID.i, 2);
+        leftController.setD(ArmDownwardsHighGravityPID.d, 2);
+        leftController.setIZone(ArmDownwardsHighGravityPID.iZ, 2);
+        leftController.setOutputRange(ArmDownwardsHighGravityPID.minOutput, ArmDownwardsHighGravityPID.maxOutput, 2);
+
+        leftController.setP(ArmDownwardsLowGravityPID.p, 3);
+        leftController.setI(ArmDownwardsLowGravityPID.i, 3);
+        leftController.setD(ArmDownwardsLowGravityPID.d, 3);
+        leftController.setIZone(ArmDownwardsLowGravityPID.iZ, 3);
+        leftController.setOutputRange(ArmDownwardsLowGravityPID.minOutput, ArmDownwardsLowGravityPID.maxOutput, 3);
 
         // Voltage Compensation and current limits
         leftMotor.enableVoltageCompensation(12);
@@ -148,26 +158,38 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public void periodic() {
-//        if (setPosition != null) { // TODO: add && !isAtSetPosition()
-//            // Calculate feed forward based on angle to counteract gravity
-//            double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
-//            double feedForward = gravityFF * sineScalar;
-//            leftController.setReference(setPosition,
-//                    CANSparkBase.ControlType.kPosition, 0, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
-//        }
+        if (setPosition != null) { // TODO: add && !isAtSetPosition()
+            // Calculate feed forward based on angle to counteract gravity
+            double sineScalar = Math.sin(Math.toRadians(getShooterDegrees() - ARM_BALANCE_DEGREES));
+            double feedForward = gravityFF * sineScalar;
+            int pidSlot;
+            double error = setPosition - leftEncoder.getPosition();
+            if (error < 0) {
+                if (sineScalar < 0) pidSlot = 1;
+                else if (sineScalar < 0.5) pidSlot = 3;
+                else pidSlot = 2;
+            } else {
+                if (sineScalar < 0) pidSlot = 3;
+                else if (sineScalar < 0.5) pidSlot = 1;
+                else pidSlot = 0;
+            }
+
+            leftController.setReference(setPosition,
+                    CANSparkBase.ControlType.kPosition, pidSlot, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
+        }
 
         // Calculate feed forward based on angle to counteract gravity
-        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
-        double feedForward = gravityFF * sineScalar;
-        if ((percentOut < 0 && leftEncoder.getPosition() > pseudoBottomLimit) || (percentOut > 0 && leftEncoder.getPosition() < pseudoTopLimit)) {
-            leftMotor.set(percentOut + feedForward);
-        } else {
-            leftMotor.set(feedForward);
-        }
-        if (RobotState.isDisabled()) {
-            resetMotorEncoderToAbsolute();
-            setPosition = getArmDegrees() * motorRotationsPerArmDegree;
-        }
+//        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
+//        double feedForward = gravityFF * sineScalar;
+//        if ((percentOut < 0 && leftEncoder.getPosition() > pseudoBottomLimit) || (percentOut > 0 && leftEncoder.getPosition() < pseudoTopLimit)) {
+//            leftMotor.set(percentOut + feedForward);
+//        } else {
+//            leftMotor.set(feedForward);
+//        }
+//        if (RobotState.isDisabled()) {
+//            resetMotorEncoderToAbsolute();
+//            setPosition = getArmDegrees() * motorRotationsPerArmDegree;
+//        }
         //System.out.println("Shooter Angle: " + getShooterDegrees());
 //        if (isAtSetPosition()) {
 //            System.out.println("Arm at set position!");

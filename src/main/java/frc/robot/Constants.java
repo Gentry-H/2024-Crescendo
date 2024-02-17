@@ -280,6 +280,43 @@ public interface Constants {
         double SHOOTER_TRAJECTORY_SPEED_MULTIPLIER = 2.1;
         double SHOOTER_TRAJECTORY_ANGLE_MULTIPLIER = 1;
         double TRAJECTORY_DEFAULT_INITIAL_ANGLE = 21.7;
+
+        interface ArmUpwardsHighGravityPID {
+            double p = 0.2;
+            double i = 0.0;
+            double d = 0.3;
+            double iZ = 0.0;
+
+            double maxOutput = 0.48;
+            double minOutput = -0.48;
+        }
+        interface ArmUpwardsLowGravityPID {
+            double p = 0.1;
+            double i = 0.0;
+            double d = 0.3;
+            double iZ = 0.0;
+
+            double maxOutput = 0.2;
+            double minOutput = -0.2;
+        }
+        interface ArmDownwardsHighGravityPID {
+            double p = 0.01;
+            double i = 0.0;
+            double d = 0.0;
+            double iZ = 0.0;
+
+            double maxOutput = 0.1;
+            double minOutput = -0.1;
+        }
+        interface ArmDownwardsLowGravityPID {
+            double p = 0.01;
+            double i = 0.0;
+            double d = 0.0;
+            double iZ = 0.0;
+
+            double maxOutput = 0.1;
+            double minOutput = -0.1;
+        }
     }
 
     interface ElevatorConstants {
