@@ -144,8 +144,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         if (getModuleStates()[0].speedMetersPerSecond < 0.1) {
             SwerveModuleState[] desiredStates = {
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(45)),
-                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(135)),
-                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(135)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(-45)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(-45)),
                     new SwerveModuleState(0.0, Rotation2d.fromDegrees(45))
             };
             for (SwerveModule mod : swerveMods) {
@@ -199,6 +199,15 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         SwerveModuleState[] states = swerveKinematics.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeed);
         setModuleStates(states);
+    }
+
+    public ChassisSpeeds getFieldRelativeSpeeds() {
+        ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
+        Translation2d fieldRelativeVector =
+                new Translation2d(robotRelativeSpeeds.vxMetersPerSecond, robotRelativeSpeeds.vyMetersPerSecond)
+                        .rotateBy(getHeading());
+
+        return new ChassisSpeeds(fieldRelativeVector.getX(), fieldRelativeVector.getY(), robotRelativeSpeeds.omegaRadiansPerSecond);
     }
 
     /**

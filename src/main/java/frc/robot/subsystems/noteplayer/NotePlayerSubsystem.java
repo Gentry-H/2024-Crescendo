@@ -25,20 +25,12 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     private ArmModule arm = new ArmModule();
     private ShooterModule shooter = new ShooterModule();
 
-
-    private final Translation3d speakerCoords;
     private double nextGuessAngle = TRAJECTORY_DEFAULT_INITIAL_ANGLE;
 
     private double shootingAngle = 90;
     private double shootingSpeed = 1;
 
-    public NotePlayerSubsystem() {
-        if (FieldState.getInstance().onRedAlliance()) {
-            speakerCoords = RED_SPEAKER;
-        } else {
-            speakerCoords = BLUE_SPEAKER;
-        }
-    }
+    public NotePlayerSubsystem() {}
 
     public IntakeModule getIntake() {
         return intake;
@@ -89,6 +81,21 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         return new Translation2d(robotDistance + horizontalOffset, verticalOffset);
     }
 
+    public Translation3d calculateShooterPosition(Pose2d botPose, Rotation2d shooterAngle) {
+        double verticalOffset = (-shooterAngle.getSin() * SHOOTER_ARM_LENGTH) +
+                (shooterAngle.getCos() * SHOOTER_ARM_TO_WHEELS_LENGTH) +
+                SHOOTER_VERTICAL_OFFSET;
+
+        double horizontalOffset = (shooterAngle.getCos() * SHOOTER_ARM_LENGTH) +
+                (shooterAngle.getSin() * SHOOTER_ARM_TO_WHEELS_LENGTH) +
+                SHOOTER_HORIZONTAL_OFFSET;
+
+        double xOffset = horizontalOffset * botPose.getRotation().getCos();
+        double yOffset = horizontalOffset * botPose.getRotation().getSin();
+
+        return new Translation3d(botPose.getX() + xOffset, botPose.getY() + yOffset, verticalOffset);
+    }
+
     /**
      * Calculates the optimal shooting angle and speed for the apex of the projectile to be at the given coordinates
      * - All distances and speeds in meters
@@ -97,7 +104,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
      * @param targetCoords The coordinates of the target as a {@link Translation3d} in meters
      * @return The target speed and angle as a {@link Translation2d} (use the getNorm method for the speed, and the getAngle method for the angle)
      */
-    public double[] calculateShootingParameters(Pose2d robotPose, Translation3d targetCoords, double initialGuessAngle) { // The brute force calculations
+    public double[] oldCalculateShootingParameters(Pose2d robotPose, Translation3d targetCoords, double initialGuessAngle) { // The brute force calculations
 
         // Get the horizontal distance from the robot to the target
         double robotToTargetDistance = robotPose.getTranslation().getDistance(targetCoords.toTranslation2d());
@@ -179,6 +186,69 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         return new double[] {launchSpeed * SHOOTER_TRAJECTORY_SPEED_MULTIPLIER, shooterAngle.getDegrees() * SHOOTER_TRAJECTORY_ANGLE_MULTIPLIER};
     }
 
+    public void calculateStationaryShootingParameters(Pose2d robotPose) {
+        Translation3d speakerCoords = FieldState.getInstance().getSpeakerCoords();
+        Translation2d target2d = speakerCoords.toTranslation2d();
+
+        Translation2d deltaTranslation = robotPose.getTranslation().minus(target2d);
+
+        double distanceToTarget = deltaTranslation.getNorm();
+
+        Translation3d shooterCoords = calculateShooterPosition(robotPose, Rotation2d.fromDegrees(0));
+
+        double extraYVel = 0; //something goes here
+
+        double vy = Math.sqrt(
+                Math.pow(extraYVel, 2)
+                        + (speakerCoords.getZ() - shooterCoords.getZ())
+                        * 2
+                        * 9.8
+        );
+
+        double airTime = (vy - extraYVel) / 9.8;
+
+        double vx = distanceToTarget/airTime;
+
+        Rotation2d launchAngle = Rotation2d.fromRadians(Math.atan2(vy, vx));
+
+        double launchVel = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+
+        int numberOfTries = 1;
+        Rotation2d lastLaunchAngle = new Rotation2d();
+        double lastLaunchVel = 0;
+        while (numberOfTries < 10 && !((launchAngle.getDegrees() > lastLaunchAngle.getDegrees()-0.01)
+                && (launchAngle.getDegrees() < lastLaunchAngle.getDegrees()+0.01)
+                && (launchVel > lastLaunchVel-0.01) && (launchVel < lastLaunchVel+0.01))) {
+
+            lastLaunchAngle = launchAngle;
+            lastLaunchVel = launchVel;
+
+            shooterCoords = calculateShooterPosition(robotPose, launchAngle);
+
+            vy = Math.sqrt(
+                    Math.pow(extraYVel, 2)
+                            + (speakerCoords.getZ() - shooterCoords.getZ())
+                            * 2
+                            * 9.8
+            );
+
+            airTime = (vy - extraYVel) / 9.8;
+
+            vx = distanceToTarget/airTime;
+
+            launchAngle = Rotation2d.fromRadians(Math.atan2(vy, vx));
+
+            launchVel = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+
+            numberOfTries++;
+        }
+
+        this.shootingSpeed = launchVel;
+        this.shootingAngle = launchAngle.getDegrees();
+    }
+
+    
+
     /**
      * Checks whether the stage is between the robot and the target
      *
@@ -223,10 +293,6 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
         }
 
         RobotState.getInstance().setHasNote(intake.noteInIntake() || indexer.noteInIndexer());
-    }
-
-    public Translation3d getSpeakerCoords() {
-        return speakerCoords;
     }
 
     /**
@@ -325,7 +391,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public void setShootingParameters() {
-        double[] shootingParameters = calculateShootingParameters(PoseEstimator.getInstance().getPose(), speakerCoords, nextGuessAngle);
+        double[] shootingParameters = oldCalculateShootingParameters(PoseEstimator.getInstance().getPose(), FieldState.getInstance().getSpeakerCoords(), nextGuessAngle);
         shootingAngle = shootingParameters[1];
         shootingSpeed = shootingParameters[0];
 //        System.out.println("Shooter Speed: " + shootingSpeed + ", Shooting Angle: " + shootingAngle);

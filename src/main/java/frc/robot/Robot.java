@@ -4,14 +4,15 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.bluecrew.util.FieldState;
-import org.littletonrobotics.urcl.URCL;
+
+import static frc.robot.Constants.FieldCoordinates.BLUE_SPEAKER;
+import static frc.robot.Constants.FieldCoordinates.RED_SPEAKER;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -36,8 +37,6 @@ public class Robot extends TimedRobot {
         m_robotContainer = new RobotContainer();
 
         DataLogManager.start();
-        //URCL.start();
-        //SignalLogger.start();
     }
 
     /**
@@ -68,6 +67,7 @@ public class Robot extends TimedRobot {
         var alliance = DriverStation.getAlliance();
         boolean onRedAlliance = alliance.filter(value -> value == DriverStation.Alliance.Red).isPresent();
         FieldState.getInstance().setOnRedAlliance(onRedAlliance);
+        FieldState.getInstance().setSpeakerCoords(onRedAlliance ? RED_SPEAKER : BLUE_SPEAKER);
     }
 
     /**
