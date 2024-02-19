@@ -259,8 +259,8 @@ public interface Constants {
         int ARM_LEFT_MOTOR_ID = 1;
         int ARM_RIGHT_MOTOR_ID = 2;
         int ARM_CAN_CODER_ID = 4;
-        float ARM_MAX_LIMIT = 5.5f;
-        float ARM_MIN_LIMIT = -11f;
+        float ARM_MAX_LIMIT = 10.2f;
+        float ARM_MIN_LIMIT = -12f;
 
         double ARM_BALANCE_DEGREES = -0.107666 * 360;
         double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;

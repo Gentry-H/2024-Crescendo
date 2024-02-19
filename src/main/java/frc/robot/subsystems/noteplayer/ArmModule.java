@@ -25,7 +25,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
     private final double gravityFF = 0.065;
     private final double positionTolerance = 0.1;
 
-    private Double setPosition = null;
+    private Double setPosition;
 
     private double percentOut = 0;
 
@@ -54,6 +54,8 @@ public class ArmModule implements Constants.NotePlayerConstants {
 
         // Reset the motor's integrated encoder based on the CANcoder
         resetMotorEncoderToAbsolute();
+
+        setPosition = leftEncoder.getPosition();
     }
 
     public double armDegreesToMotorRotations(double degrees) {
@@ -69,6 +71,10 @@ public class ArmModule implements Constants.NotePlayerConstants {
 
     public void rotateToDegrees(double degrees) {
         setPosition = armDegreesToMotorRotations(degrees);
+    }
+
+    public void rotateToMotorRotations(double rotations) {
+        setPosition = rotations;
     }
 
     public double getArmDegrees() {
@@ -158,33 +164,51 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public void periodic() {
-//        if (setPosition != null) { // TODO: add && !isAtSetPosition()
-//            // Calculate feed forward based on angle to counteract gravity
-//            double sineScalar = Math.sin(Math.toRadians(getShooterDegrees() - ARM_BALANCE_DEGREES));
-//            double feedForward = gravityFF * sineScalar;
-//            int pidSlot;
-//            double error = setPosition - leftEncoder.getPosition();
-//            if (error < 0) {
-//                if (sineScalar < 0) pidSlot = 1;
-//                else if (sineScalar < 0.5) pidSlot = 3;
-//                else pidSlot = 2;
-//            } else {
-//                if (sineScalar < 0) pidSlot = 3;
-//                else if (sineScalar < 0.5) pidSlot = 1;
-//                else pidSlot = 0;
-//            }
-//
-//            leftController.setReference(setPosition,
-//                    CANSparkBase.ControlType.kPosition, pidSlot, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
-//        }
+        if (setPosition != null) { // TODO: add && !isAtSetPosition()
+            // Calculate feed forward based on angle to counteract gravity
+            double sineScalar = Math.sin(Math.toRadians(getShooterDegrees() - ARM_BALANCE_DEGREES));
+            double feedForward = gravityFF * sineScalar;
+            int pidSlot;
+            double error = setPosition - leftEncoder.getPosition();
+            if (error < 0) {
+                if (sineScalar < 0) {
+                    pidSlot = 1;
+                    System.out.println("Selected Arm PID 1, Up weak");
+                }
+                else if (sineScalar < 0.5) {
+                    System.out.println("Selected Arm PID 3, Down weak");
+                    pidSlot = 3;
+                }
+                else {
+                    System.out.println("Selected Arm PID 2, Down Strong");
+                    pidSlot = 2;
+                }
+            } else {
+                if (sineScalar < 0) {
+                    System.out.println("Selected Arm PID 3 Down weak");
+                    pidSlot = 3;
+                }
+                else if (sineScalar < 0.5) {
+                    System.out.println("Selected Arm PID 1, Up weak");
+                    pidSlot = 1;
+                }
+                else {
+                    System.out.println("Selected Arm PID 0, Up strong");
+                    pidSlot = 0;
+                }
+            }
+
+            leftController.setReference(setPosition,
+                    CANSparkBase.ControlType.kPosition, pidSlot, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
+        }
 
         // Calculate feed forward based on angle to counteract gravity
-        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
-        double feedForward = gravityFF * sineScalar;
+//        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
+//        double feedForward = gravityFF * sineScalar;
 //        if ((percentOut < 0 && leftEncoder.getPosition() > pseudoBottomLimit) || (percentOut > 0 && leftEncoder.getPosition() < pseudoTopLimit)) {
 //            leftMotor.set(percentOut + feedForward);
 //        } else {
-            leftMotor.set(feedForward);
+//            leftMotor.set(feedForward);
 //        }
 //        if (RobotState.isDisabled()) {
 //            resetMotorEncoderToAbsolute();
