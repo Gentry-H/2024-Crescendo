@@ -262,7 +262,7 @@ public interface Constants {
         float ARM_MAX_LIMIT = 10.2f;
         float ARM_MIN_LIMIT = -12f;
 
-        double ARM_BALANCE_DEGREES = -0.107666 * 360;
+        double ARM_BALANCE_DEGREES = -36.8;
         double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;
         double ARM_PICKUP_ANGLE = 66;
         double ARM_SHOOTING_ANGLE = 48;
@@ -283,9 +283,9 @@ public interface Constants {
 
         interface ArmUpwardsHighGravityPID {
             double p = 0.2;
-            double i = 0.0;
-            double d = 0.3;
-            double iZ = 0.0;
+            double i = 0.00002;
+            double d = 0.1;
+            double iZ = 3.0;
 
             double maxOutput = 0.48;
             double minOutput = -0.48;
@@ -293,14 +293,14 @@ public interface Constants {
         interface ArmUpwardsLowGravityPID {
             double p = 0.1;
             double i = 0.0;
-            double d = 0.3;
+            double d = 0.0;
             double iZ = 0.0;
 
             double maxOutput = 0.2;
             double minOutput = -0.2;
         }
         interface ArmDownwardsHighGravityPID {
-            double p = 0.01;
+            double p = 0.05;
             double i = 0.0;
             double d = 0.0;
             double iZ = 0.0;
@@ -309,7 +309,7 @@ public interface Constants {
             double minOutput = -0.1;
         }
         interface ArmDownwardsLowGravityPID {
-            double p = 0.01;
+            double p = 0.04;
             double i = 0.0;
             double d = 0.0;
             double iZ = 0.0;

@@ -10,6 +10,10 @@ import com.revrobotics.*;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardComponent;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardContainer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class ArmModule implements Constants.NotePlayerConstants {
@@ -58,7 +62,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
         setPosition = leftEncoder.getPosition();
     }
 
-    public double armDegreesToMotorRotations(double degrees) {
+    public double shooterDegreesToMotorRotations(double degrees) {
         //System.out.println("Setting Arm Position: " + (-degrees*motorRotationsPerArmDegree));
         return -degrees * motorRotationsPerArmDegree;
     }
@@ -70,7 +74,7 @@ public class ArmModule implements Constants.NotePlayerConstants {
     }
 
     public void rotateToDegrees(double degrees) {
-        setPosition = armDegreesToMotorRotations(degrees);
+        setPosition = shooterDegreesToMotorRotations(degrees);
     }
 
     public void rotateToMotorRotations(double rotations) {
@@ -168,57 +172,65 @@ public class ArmModule implements Constants.NotePlayerConstants {
             // Calculate feed forward based on angle to counteract gravity
             double sineScalar = Math.sin(Math.toRadians(getShooterDegrees() - ARM_BALANCE_DEGREES));
             double feedForward = gravityFF * sineScalar;
-            int pidSlot;
-            double error = setPosition - leftEncoder.getPosition();
-            if (error < 0) {
-                if (sineScalar < 0) {
-                    pidSlot = 1;
-                    System.out.println("Selected Arm PID 1, Up weak");
-                }
-                else if (sineScalar < 0.5) {
-                    System.out.println("Selected Arm PID 3, Down weak");
-                    pidSlot = 3;
-                }
-                else {
-                    System.out.println("Selected Arm PID 2, Down Strong");
-                    pidSlot = 2;
-                }
-            } else {
-                if (sineScalar < 0) {
-                    System.out.println("Selected Arm PID 3 Down weak");
-                    pidSlot = 3;
-                }
-                else if (sineScalar < 0.5) {
-                    System.out.println("Selected Arm PID 1, Up weak");
-                    pidSlot = 1;
-                }
-                else {
-                    System.out.println("Selected Arm PID 0, Up strong");
-                    pidSlot = 0;
-                }
-            }
+            int pidSlot = getPidSlot(sineScalar);
+
+            //System.out.println("Current Position: " + leftEncoder.getPosition() + ", Set Position: " + setPosition + ", Profile slot: " + pidSlot);
 
             leftController.setReference(setPosition,
                     CANSparkBase.ControlType.kPosition, pidSlot, feedForward, SparkPIDController.ArbFFUnits.kPercentOut);
+            SmartDashboard.putNumber("Arm Motor Position", leftEncoder.getPosition());
+            SmartDashboard.putNumber("Arm Set Position", setPosition);
+            SmartDashboard.putNumber("Arm Profile Slot", pidSlot);
+            SmartDashboard.putNumber("Arm Motor Output", leftMotor.getAppliedOutput());
+            SmartDashboard.putNumber("Arm Motor Current", leftMotor.getOutputCurrent());
+            SmartDashboard.putNumber("Arm Feedforward", feedForward);
+            SmartDashboard.putNumber("Shooter Degrees", getShooterDegrees());
         }
 
         // Calculate feed forward based on angle to counteract gravity
-//        double sineScalar = Math.sin(Units.rotationsToRadians(armCANcoder.getAbsolutePosition().getValue()) - ARM_BALANCE_DEGREES);
+//        double sineScalar = Math.sin(Math.toRadians(getShooterDegrees() - ARM_BALANCE_DEGREES));
 //        double feedForward = gravityFF * sineScalar;
 //        if ((percentOut < 0 && leftEncoder.getPosition() > pseudoBottomLimit) || (percentOut > 0 && leftEncoder.getPosition() < pseudoTopLimit)) {
 //            leftMotor.set(percentOut + feedForward);
 //        } else {
 //            leftMotor.set(feedForward);
 //        }
-//        if (RobotState.isDisabled()) {
-//            resetMotorEncoderToAbsolute();
-//            setPosition = getArmDegrees() * motorRotationsPerArmDegree;
-//        }
+        if (RobotState.isDisabled()) {
+            resetMotorEncoderToAbsolute();
+            setPosition = getArmDegrees() * motorRotationsPerArmDegree;
+        }
         //System.out.println("Shooter Angle: " + getShooterDegrees());
 //        if (isAtSetPosition()) {
 //            System.out.println("Arm at set position!");
 //        } else {
 //            System.out.println("Arm set position: " + setPosition + ", Actual: " + leftEncoder.getPosition() + ", Arm Degrees: " + getArmDegrees() * motorRotationsPerArmDegree);
 //        }
+    }
+
+    private int getPidSlot(double sineScalar) {
+        int pidSlot;
+        double error = setPosition - leftEncoder.getPosition();
+        if (error < 0) {
+            if (sineScalar < 0) {
+                pidSlot = 1;
+            }
+            else if (sineScalar < 0.7) {
+                pidSlot = 3;
+            }
+            else {
+                pidSlot = 2;
+            }
+        } else {
+            if (sineScalar < 0) {
+                pidSlot = 3;
+            }
+            else if (sineScalar < 0.7) {
+                pidSlot = 1;
+            }
+            else {
+                pidSlot = 0;
+            }
+        }
+        return pidSlot;
     }
 }

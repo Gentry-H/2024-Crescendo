@@ -394,7 +394,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command rotateArmToDegrees(double degrees) {
-        return new RunCommand(
+        return new InstantCommand(
                 () -> arm.rotateToDegrees(degrees)
         );
     }
@@ -406,7 +406,11 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public Command setArmPosition(double position) {
-        return new InstantCommand(() -> arm.setPseudoLimits(arm.armDegreesToMotorRotations(position)));
+        return new InstantCommand(() -> arm.setPseudoLimits(arm.shooterDegreesToMotorRotations(position)));
+    }
+
+    public Command incrementArmPosition(double increment) {
+        return new InstantCommand(() -> arm.rotateToDegrees(arm.getShooterDegrees() + increment));
     }
 
 //    public Command sysIdQuasiStatic(SysIdRoutine.Direction direction) {
