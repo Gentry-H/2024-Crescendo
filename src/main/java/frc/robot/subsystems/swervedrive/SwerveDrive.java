@@ -304,7 +304,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
      * @return The angle from your current position to the given coordinates
      */
     public Rotation2d getAngleToPose(Translation2d coords) {
-        return poseEstimator.getPose().getTranslation().minus(coords).getAngle().minus(poseEstimator.getPose().getRotation());
+        return poseEstimator.getPose().getTranslation().minus(coords).getAngle();
     }
 
     private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup, BooleanSupplier robotCentric) {
@@ -370,7 +370,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
 
     /**
-     * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
+     * Used for driving the robot during teleop while rotating to face a position on the field
      *
      * @param rawTranslationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
      * @param rawStrafeSup      {@link DoubleSupplier} for the left/right speed as a percentage

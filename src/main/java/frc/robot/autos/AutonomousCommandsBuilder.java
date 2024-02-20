@@ -64,8 +64,9 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
             // Shoot in the speaker firsts thing
             addCommands(
                     Commands.print("Shooting Into Speaker!"),
-                    notePlayerSubsystem.aimAndSpinUpForSpeaker().alongWith(notePlayerSubsystem.driveArmPercent(() -> 0.15)).until(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)
-                            .andThen(notePlayerSubsystem.feedNoteToShooter().raceWith(notePlayerSubsystem.aimAndSpinUpForSpeaker()).andThen(notePlayerSubsystem.finishShooting())),
+                    notePlayerSubsystem.aimAndSpinUpForSpeaker()
+                            .alongWith(notePlayerSubsystem.driveArmPercent(() -> 0.15)).withTimeout(2),
+                    //.until(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)
                     notePlayerSubsystem.prepForPickup());
             System.out.println("Shoot Speaker");
             lastScoredIn = "Sp";

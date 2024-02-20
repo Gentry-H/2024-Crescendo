@@ -33,7 +33,7 @@ public interface Constants {
     interface DriverControls {
         double stickDeadband = 0.1;
         double swerveSensitivityExponent = 1.8; // Should to be >= 1
-        double swerveSpeedMultiplier = 0.7; // Should be <= 1
+        double swerveSpeedMultiplier = 1; // Should be <= 1
         double swerveRotationMultiplier = 0.6; // Should be <= 1
     }
     /**
@@ -259,10 +259,10 @@ public interface Constants {
         int ARM_LEFT_MOTOR_ID = 1;
         int ARM_RIGHT_MOTOR_ID = 2;
         int ARM_CAN_CODER_ID = 4;
-        float ARM_MAX_LIMIT = 5.5f;
-        float ARM_MIN_LIMIT = -11f;
+        float ARM_MAX_LIMIT = 10.2f;
+        float ARM_MIN_LIMIT = -12f;
 
-        double ARM_BALANCE_DEGREES = -0.107666 * 360;
+        double ARM_BALANCE_DEGREES = -36.8;
         double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;
         double ARM_PICKUP_ANGLE = 66;
         double ARM_SHOOTING_ANGLE = 48;
@@ -280,6 +280,43 @@ public interface Constants {
         double SHOOTER_TRAJECTORY_SPEED_MULTIPLIER = 2.1;
         double SHOOTER_TRAJECTORY_ANGLE_MULTIPLIER = 1;
         double TRAJECTORY_DEFAULT_INITIAL_ANGLE = 21.7;
+
+        interface ArmUpwardsHighGravityPID {
+            double p = 0.2;
+            double i = 0.00002;
+            double d = 0.1;
+            double iZ = 3.0;
+
+            double maxOutput = 0.48;
+            double minOutput = -0.48;
+        }
+        interface ArmUpwardsLowGravityPID {
+            double p = 0.1;
+            double i = 0.0;
+            double d = 0.0;
+            double iZ = 0.0;
+
+            double maxOutput = 0.2;
+            double minOutput = -0.2;
+        }
+        interface ArmDownwardsHighGravityPID {
+            double p = 0.05;
+            double i = 0.0;
+            double d = 0.0;
+            double iZ = 0.0;
+
+            double maxOutput = 0.1;
+            double minOutput = -0.1;
+        }
+        interface ArmDownwardsLowGravityPID {
+            double p = 0.04;
+            double i = 0.0;
+            double d = 0.0;
+            double iZ = 0.0;
+
+            double maxOutput = 0.1;
+            double minOutput = -0.1;
+        }
     }
 
     interface ElevatorConstants {
