@@ -13,6 +13,9 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.bluecrew.util.FieldState;
 import org.littletonrobotics.urcl.URCL;
 
+import static frc.robot.Constants.FieldCoordinates.BLUE_SPEAKER;
+import static frc.robot.Constants.FieldCoordinates.RED_SPEAKER;
+
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -68,6 +71,12 @@ public class Robot extends TimedRobot {
         var alliance = DriverStation.getAlliance();
         boolean onRedAlliance = alliance.filter(value -> value == DriverStation.Alliance.Red).isPresent();
         FieldState.getInstance().setOnRedAlliance(onRedAlliance);
+
+        if (onRedAlliance) {
+            FieldState.getInstance().setSpeakerCoords(RED_SPEAKER);
+        } else {
+            FieldState.getInstance().setSpeakerCoords(BLUE_SPEAKER);
+        }
     }
 
     /**

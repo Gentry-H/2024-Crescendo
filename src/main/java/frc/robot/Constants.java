@@ -179,9 +179,9 @@ public interface Constants {
         Double NOTES_INDEXER_CAMERA_ANGLE = 74.15d;  // angle from floor
 
         Transform3d ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS =
-                new Transform3d(new Translation3d(Units.inchesToMeters(10.625d), Units.inchesToMeters(-10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(32d), 0d));
+                new Transform3d(new Translation3d(Units.inchesToMeters(11.5d), Units.inchesToMeters(-10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(-38d), 0/*Math.PI+3.125*/));
         Transform3d ROBOT_TO_TAG_REAR_LEFT_CAM_POS =
-                new Transform3d(new Translation3d(Units.inchesToMeters(-10.625d), Units.inchesToMeters(10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(32d), Math.toRadians(180d)));
+                new Transform3d(new Translation3d(Units.inchesToMeters(-11.5d), Units.inchesToMeters(10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(-38d), Math.PI/*3.125*/));
 
         // The layout of the AprilTags on the field
         AprilTagFieldLayout tagLayout =
@@ -264,7 +264,7 @@ public interface Constants {
 
         double ARM_BALANCE_DEGREES = -36.8;
         double ARM_COG_PERPENDICULAR_DEGREES = ARM_BALANCE_DEGREES - 90;
-        double ARM_PICKUP_ANGLE = 66;
+        double ARM_PICKUP_ANGLE = 68;
         double ARM_SHOOTING_ANGLE = 48;
         double ARM_AMP_ANGLE = -48;
 
@@ -283,7 +283,7 @@ public interface Constants {
 
         interface ArmUpwardsHighGravityPID {
             double p = 0.2;
-            double i = 0.00002;
+            double i = 0.000035;
             double d = 0.1;
             double iZ = 3.0;
 

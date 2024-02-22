@@ -133,17 +133,17 @@ public class RobotContainer implements Constants.AutoConstants {
         driver.a().onTrue(notePlayerSubsystem.scoreAmp());
 
 
-//        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.15));
-//        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> -0.125));
-//        auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
-//        auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
-//        auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
-//        auxDriver.x().whileTrue(notePlayerSubsystem.eject());
+        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.15));
+        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> -0.125));
+        auxDriver.b().whileTrue(notePlayerSubsystem.aimAndSpinUpForSpeaker());
+        auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
+        auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
+        auxDriver.x().whileTrue(notePlayerSubsystem.eject());
 
-        auxDriver.y().onTrue(notePlayerSubsystem.rotateArmToDegrees(-10));
-        auxDriver.b().onTrue(notePlayerSubsystem.rotateArmToDegrees(-20));
-        auxDriver.x().onTrue(notePlayerSubsystem.rotateArmToDegrees(-36));
-        auxDriver.a().onTrue(notePlayerSubsystem.rotateArmToDegrees(10));
+//        auxDriver.y().onTrue(notePlayerSubsystem.rotateArmToDegrees(-10));
+//        auxDriver.b().onTrue(notePlayerSubsystem.rotateArmToDegrees(-20));
+//        auxDriver.x().onTrue(notePlayerSubsystem.rotateArmToDegrees(-36));
+//        auxDriver.a().onTrue(notePlayerSubsystem.rotateArmToDegrees(10));
     }
 
     /**

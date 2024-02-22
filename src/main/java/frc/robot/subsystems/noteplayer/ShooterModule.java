@@ -81,7 +81,7 @@ public class ShooterModule implements Constants.ShooterConstants {
         topShooterVelocity.Velocity = mps/SHOOTER_METERS_PER_ROTATION;
         topShooterVelocity.FeedForward = shooterFeedForward.calculate(mps);
 
-        System.out.println("Shooter Velocity MPS set to: " + mps);
+//        System.out.println("Shooter Velocity MPS set to: " + mps);
         topShooterMotor.setControl(topShooterVelocity);
         bottomShooterMotor.setControl(topShooterVelocity);
     }

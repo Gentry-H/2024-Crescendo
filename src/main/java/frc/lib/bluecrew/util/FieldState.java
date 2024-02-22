@@ -1,9 +1,12 @@
 package frc.lib.bluecrew.util;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 import java.util.Arrays;
+
+import static frc.robot.Constants.FieldCoordinates.BLUE_SPEAKER;
 
 public class FieldState implements Constants.GameStateConstants {
 
@@ -13,6 +16,8 @@ public class FieldState implements Constants.GameStateConstants {
     private int centerNoteIndex;
     private boolean centerNotesGone;
     private boolean onRedAlliance;
+
+    private Translation3d speakerCoords = BLUE_SPEAKER;
 
     private FieldState() {
         centerNotesExist = new boolean[]{
@@ -76,5 +81,13 @@ public class FieldState implements Constants.GameStateConstants {
 
     public void setOnRedAlliance(boolean onRedAlliance) {
         this.onRedAlliance = onRedAlliance;
+    }
+
+    public Translation3d getSpeakerCoords() {
+        return speakerCoords;
+    }
+
+    public void setSpeakerCoords(Translation3d speakerCoords) {
+        this.speakerCoords = speakerCoords;
     }
 }

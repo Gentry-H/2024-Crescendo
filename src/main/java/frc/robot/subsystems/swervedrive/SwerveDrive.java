@@ -7,6 +7,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -299,8 +300,9 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
     }
 
     private DoubleSupplier speedsFromJoysticks(DoubleSupplier rawSpeedSup, BooleanSupplier robotCentric) {
-        return () -> ((FieldState.getInstance().onRedAlliance()&&!robotCentric.getAsBoolean() ? 1 : -1) * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband))
-                , swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * swerveSpeedMultiplier);
+        return () -> ((FieldState.getInstance().onRedAlliance()&&!robotCentric.getAsBoolean() ? 1 : -1)
+                * Math.copySign(Math.pow(Math.abs(MathUtil.applyDeadband(rawSpeedSup.getAsDouble(), stickDeadband)),
+                swerveSensitivityExponent), rawSpeedSup.getAsDouble()) * swerveSpeedMultiplier);
     }
 
     // **** Commands ****
@@ -391,6 +393,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         poseEstimator.updateWithVision();
 
         posePublisher.set(poseEstimator.getPose());
+
+        SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 
 //        SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
 //        SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());
