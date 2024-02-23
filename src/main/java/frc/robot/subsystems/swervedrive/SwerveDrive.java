@@ -7,10 +7,10 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.*;
@@ -49,6 +49,11 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     private final int invertJoystickInputs;
 
+    private Rotation2d holdHeading;
+    private boolean faceSpeaker = false;
+
+    private Translation3d speakerCoords = FieldState.getInstance().getSpeakerCoords();
+
     public SwerveDrive() {
         gyro = new AHRS(SPI.Port.kMXP);
         gyro.reset();
@@ -64,7 +69,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
         poseEstimator = PoseEstimator.getInstance();
 
-        rotationPIDController = new PIDController(0.04d, 0d, 0.004d);
+        rotationPIDController = new PIDController(0.04d, 0.00001d, 0.004d);
+        rotationPIDController.setIZone(1);
         rotationPIDController.enableContinuousInput(-180, 180);
         rotationPIDController.setTolerance(0.1);
 
@@ -94,6 +100,8 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         } else {
             invertJoystickInputs = -1;
         }
+
+        holdHeading = getHeading();
     }
 
     /**
@@ -202,6 +210,10 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         setModuleStates(states);
     }
 
+    public ChassisSpeeds getFieldRelativeSpeeds() {
+        return ChassisSpeeds.fromRobotRelativeSpeeds(getRobotRelativeSpeeds(), getHeading());
+    }
+
     /**
      * @return The heading reported by the {@link SwerveDrivePoseEstimator} as a {@link Rotation2d}
      */
@@ -224,6 +236,22 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
 
     public void zeroHeading(){
         poseEstimator.setPose(getGyroYaw(), getModulePositions(), new Pose2d(poseEstimator.getPose().getTranslation(), new Rotation2d()));
+    }
+
+    public void setHoldHeading(Rotation2d holdHeading) {
+        this.holdHeading = holdHeading;
+    }
+
+    public Rotation2d getHoldHeading() {
+        return holdHeading;
+    }
+
+    public void setSpeakerCoords(Translation3d speakerCoords) {
+        this.speakerCoords = speakerCoords;
+    }
+
+    public void setFaceSpeaker(boolean faceSpeaker) {
+        this.faceSpeaker = faceSpeaker;
     }
 
     /**
@@ -255,14 +283,22 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
      * @param translationVal  {@link Double} for the forwards/backwards speed as a percentage
      * @param strafeVal       {@link Double} for the left/right speed as a percentage
      * @param slowVal         {@link Double} for the amount to slow the robot by
-     * @param rotationVal     {@link Double} for the angular velocity as a percentage
+     * @param manualRotationVal     {@link Double} for the angular velocity as a percentage
      * @param robotCentricSup {@link Double} for driving in robot or field centric mode
      */
     public void teleopDriveSwerveDrive(double translationVal, double strafeVal, double slowVal,
-                                       double rotationVal, boolean robotCentricSup) {
-        translationVal *= (1-(slowVal*0.75));
-        strafeVal *= (1-slowVal*0.75);
-
+                                       double manualRotationVal, boolean robotCentricSup) {
+        translationVal *= (1 - (slowVal * 0.75));
+        strafeVal *= (1 - slowVal * 0.75);
+        double rotationVal;
+        if (faceSpeaker) holdHeading = getAngleToPose(speakerCoords.toTranslation2d());
+        if (manualRotationVal != 0) {
+            rotationVal = manualRotationVal;
+            holdHeading = getHeading();
+        }
+        else {
+            rotationVal = rotationPercentageFromTargetAngle(holdHeading);
+        }
 
         SmartDashboard.putNumber("Target Speed", Math.sqrt(Math.pow(translationVal * maxSpeed, 2)
                 + Math.pow(strafeVal * maxSpeed, 2)));
@@ -281,7 +317,7 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
      */
     public double rotationPercentageFromTargetAngle(Rotation2d targetAngle) {
         System.out.println(targetAngle.getDegrees());
-        return MathUtil.clamp(-rotationPIDController.calculate(getHeading().getDegrees() % 360,
+        return MathUtil.clamp(rotationPIDController.calculate(getHeading().getDegrees(),
                 targetAngle.getDegrees() % 360) * 0.1, -0.1, 0.1);
     }
 
@@ -333,56 +369,25 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
     }
 
     /**
-     * Used for driving the robot during teleop while rotating to the angle reported by the D-Pad of the controller
-     *
-     * @param rawTranslationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
-     * @param rawStrafeSup      {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param targetDegrees     The target angle
-     * @param robotCentricSup   {@link BooleanSupplier} for driving in robot or field centric mode
+     * Used for rotating to the angle reported by the D-Pad of the controller
      */
-    public Command teleopDriveSwerveDriveAndRotateToAngleCommand(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
-                                                                 DoubleSupplier targetDegrees, BooleanSupplier robotCentricSup) {
-
-        return this.run(
-                () -> driveSwerveDriveAndRotateToAngle(rawTranslationSup, rawStrafeSup, rawSlowSup, targetDegrees, robotCentricSup));
-
+    public Command setHoldHeading(double holdHeading) {
+        return new InstantCommand(() -> setHoldHeading(Rotation2d.fromDegrees(holdHeading)));
     }
 
-    public void driveSwerveDriveAndRotateToAngle(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
-                                                                 DoubleSupplier targetDegrees, BooleanSupplier robotCentricSup) {
-        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
-
-        teleopDriveSwerveDrive(
-                        speedsFromJoysticks(rawTranslationSup, robotCentricSup).getAsDouble(),
-                        speedsFromJoysticks(rawStrafeSup, robotCentricSup).getAsDouble(),
-                        slowSup.getAsDouble(),
-                        rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees.getAsDouble())),
-                        robotCentricSup.getAsBoolean()
-                );
+    public void driveSwerveDriveAndRotateToAngle(double translation, double strafe, double targetDegrees) {
+        drive(new Translation2d(translation, strafe).times(maxSpeed),
+                rotationPercentageFromTargetAngle(Rotation2d.fromDegrees(targetDegrees))*maxAngularVelocity,
+                false,
+                false);
     }
 
 
     /**
-     * Used for driving the robot during teleop while rotating to face a position on the field
-     *
-     * @param rawTranslationSup {@link DoubleSupplier} for the forwards/backwards speed as a percentage
-     * @param rawStrafeSup      {@link DoubleSupplier} for the left/right speed as a percentage
-     * @param position          The {@link Translation2d} to face
-     * @param robotCentricSup   {@link BooleanSupplier} for driving in robot or field centric mode
+     * Enables facing the speaker when called, and disables when interrupted
      */
-    public Command teleopDriveSwerveDriveAndFacePosition(DoubleSupplier rawTranslationSup, DoubleSupplier rawStrafeSup, DoubleSupplier rawSlowSup,
-                                                         Translation2d position, BooleanSupplier robotCentricSup) {
-        DoubleSupplier slowSup = () -> MathUtil.applyDeadband(rawSlowSup.getAsDouble(), stickDeadband);
-
-        return this.run(
-                () -> teleopDriveSwerveDrive(
-                        speedsFromJoysticks(rawTranslationSup, robotCentricSup).getAsDouble(),
-                        speedsFromJoysticks(rawStrafeSup, robotCentricSup).getAsDouble(),
-                        slowSup.getAsDouble(),
-                        rotationPercentageFromTargetAngle(
-                                getAngleToPose(position)),
-                        robotCentricSup.getAsBoolean()
-                ));
+    public Command faceSpeaker() {
+        return Commands.startEnd(() -> faceSpeaker=true, () -> faceSpeaker=false).withName("faceSpeaker");
     }
 
     @Override
@@ -395,6 +400,13 @@ public class SwerveDrive extends SubsystemBase implements Constants.Swerve, Cons
         posePublisher.set(poseEstimator.getPose());
 
         SmartDashboard.putNumber("Distance To Speaker", Math.abs(poseEstimator.getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+        SmartDashboard.putNumber("Hold Heading", holdHeading.getDegrees());
+        SmartDashboard.putNumber("Current Heading", getHeading().getDegrees());
+
+        if (RobotState.isDisabled()) {
+            setHoldHeading(getHeading());
+            speakerCoords = FieldState.getInstance().getSpeakerCoords();
+        }
 
 //        SmartDashboard.putNumber("Swerve Estimator X", poseEstimator.getPose().getX());
 //        SmartDashboard.putNumber("Swerve Estimator Y", poseEstimator.getPose().getY());

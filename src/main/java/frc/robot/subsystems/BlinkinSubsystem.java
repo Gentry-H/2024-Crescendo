@@ -46,16 +46,25 @@ public class BlinkinSubsystem extends SubsystemBase  implements Constants.Misc, 
     @Override
     public void periodic() {
         switch (rs.getShooterMode()) {
-            case SPEAKER: switch (rs.getRobotCycleStatus()) {
-                case NO_NOTE_CANT_SEE_SPEAKER: blinkinOutput.set(RED);
-                case NO_NOTE_SEES_SPEAKER: blinkinOutput.set(RED_ORANGE);
-                case HAS_NOTE_CANT_SEE_SPEAKER: blinkinOutput.set(YELLOW);
-                case HAS_NOTE_SEES_SPEAKER: switch (rs.getShooterStatus()) {
-                    case READY: blinkinOutput.set(DARK_GREEN);
-                    case UNREADY: blinkinOutput.set(BLUE_GREEN);
+            case SPEAKER -> {
+                switch (rs.getRobotCycleStatus()) {
+                    case NO_NOTE_CANT_SEE_SPEAKER ->
+                        blinkinOutput.set(RED);
+                    case NO_NOTE_SEES_SPEAKER ->
+                        blinkinOutput.set(RED_ORANGE);
+                    case HAS_NOTE_CANT_SEE_SPEAKER ->
+                        blinkinOutput.set(YELLOW);
+                    case HAS_NOTE_SEES_SPEAKER -> {
+                        switch (rs.getShooterStatus()) {
+                            case READY ->
+                                blinkinOutput.set(DARK_GREEN);
+                            case UNREADY ->
+                                blinkinOutput.set(BLUE_GREEN);
+                        }
+                    }
                 }
             }
-            case PICKUP:
+            case PICKUP -> {
                 if (!rs.hasNote()) {
                     if (rs.isNoteIsAvailable()) {
                         blinkinOutput.set(HEARTBEAT_BLUE);
@@ -63,12 +72,15 @@ public class BlinkinSubsystem extends SubsystemBase  implements Constants.Misc, 
                         blinkinOutput.set(HEARTBEAT_RED);
                     }
                 } else blinkinOutput.set(LAWN_GREEN);
-            case AMP: if (rs.hasNote()) {
-                switch (rs.getShooterStatus()) {
-                    case READY -> blinkinOutput.set(DARK_GREEN);
-                    case UNREADY -> blinkinOutput.set(BLUE_GREEN);
-                }
-            } else blinkinOutput.set(RED_ORANGE);
+            }
+            case AMP -> {
+                if (rs.hasNote()) {
+                    switch (rs.getShooterStatus()) {
+                        case READY -> blinkinOutput.set(DARK_GREEN);
+                        case UNREADY -> blinkinOutput.set(BLUE_GREEN);
+                    }
+                } else blinkinOutput.set(RED_ORANGE);
+            }
         }
     }
 

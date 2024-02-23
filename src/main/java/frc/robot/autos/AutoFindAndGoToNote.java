@@ -55,12 +55,7 @@ public class AutoFindAndGoToNote extends Command {
             // blink the blinkin
             RobotState.getInstance().setNoteIsAvailable(true);
 
-//            System.out.println("Note found!  ---------------");
             PhotonTrackedTarget target = pipelineResult.getBestTarget();
-
-//            System.out.println("Pitch: " + target.getPitch());
-//            System.out.println("Yaw: " + target.getYaw());
-//            System.out.println("Heading: " + heading);
 
             /*
                 Observed pitches and yaws from the indexer camera with a note place at the following distances
@@ -83,29 +78,19 @@ public class AutoFindAndGoToNote extends Command {
 
              */
 
-            // Select the tollerence (in degrees) of the angle toward the target based on distance (in feet, approximated to pitch)
-            int angleTolerance = 2;
             double angleOffset = target.getYaw();
 
             if(target.getPitch() < -27) {
-//                System.out.println("Note is at intake.");
-                angleTolerance = 1;
                 neededSpeed = 0.00;
             }
             else if(target.getPitch() < 0) {
-//                System.out.println("Note is within a foot");
-                angleTolerance = 1;
-                neededSpeed = 0.40;
+                neededSpeed = 0.19;
             }
             else if(target.getPitch() < 15) {
-//                System.out.println("Note is within 3 feet");
-                angleTolerance = 1;
-                neededSpeed = 0.52;
+                neededSpeed = 0.3;
             }
             else if(target.getPitch() > 15) {
-//                System.out.println("Note is beyond 3 feet");
-                angleTolerance = 2;
-                neededSpeed = 0.63;
+                neededSpeed = 0.44;
             }
 
             neededRotation = angleOffset;
@@ -113,32 +98,14 @@ public class AutoFindAndGoToNote extends Command {
             final double speed = -neededSpeed;
             final double rotation = neededRotation;
 
-            // forward/back (translation), left/right (strafe), slowness, target heading in degrees, robot centric
-            swerveDrive.driveSwerveDriveAndRotateToAngle(() -> speed, () -> 0.0 , () -> 0.0, () -> heading + rotation, () -> true);
-/*
-            if(target.getYaw() < -angleTolerance) {
-                System.out.println("moving left to target!");
-//                neededRotation = angleOffset;
-            }
-            else if(target.getYaw() > angleTolerance) {
-                System.out.println("moving right to target!");
-//                neededRotation = -angleOffset;
-            }
- */
+            // forward/back (translation), left/right (strafe), target heading in degrees
+            swerveDrive.driveSwerveDriveAndRotateToAngle(speed, 0.0, heading + rotation);
         }
         else {
             System.out.println("No Note in view...");
-            neededSpeed = 0.0;
-            neededRotation = 0.0;
-            // blink the blinkin
             RobotState.getInstance().setNoteIsAvailable(false);
             finished = true;
         }
-
-//        System.out.println("Desired speed: " + neededSpeed);
-//        System.out.println("Desired rotation (degrees): " + neededRotation);
-//        System.out.println("--------------------------------------");
-
     }
 
     @Override

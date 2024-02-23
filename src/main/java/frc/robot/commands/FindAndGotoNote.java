@@ -83,29 +83,23 @@ public class FindAndGotoNote extends Command {
 
              */
 
-            // Select the tollerence (in degrees) of the angle toward the target based on distance (in feet, approximated to pitch)
-            int angleTolerance = 2;
             double angleOffset = target.getYaw();
 
             if(target.getPitch() < -27) {
 //                System.out.println("Note is at intake.");
-                angleTolerance = 1;
                 neededSpeed = 0.00;
             }
             else if(target.getPitch() < 0) {
 //                System.out.println("Note is within a foot");
-                angleTolerance = 1;
-                neededSpeed = 0.40;
+                neededSpeed = 0.19;
             }
             else if(target.getPitch() < 15) {
 //                System.out.println("Note is within 3 feet");
-                angleTolerance = 1;
-                neededSpeed = 0.52;
+                neededSpeed = 0.3;
             }
             else if(target.getPitch() > 15) {
 //                System.out.println("Note is beyond 3 feet");
-                angleTolerance = 2;
-                neededSpeed = 0.63;
+                neededSpeed = 0.44;
             }
 
             neededRotation = angleOffset;
@@ -136,8 +130,8 @@ public class FindAndGotoNote extends Command {
         final double speed = -neededSpeed;
         final double rotation = neededRotation;
 
-        // forward/back (translation), left/right (strafe), slowness, target heading in degrees, robot centric
-        swerveDrive.driveSwerveDriveAndRotateToAngle(() -> speed, () -> 0.0 , () -> 0.0, () -> heading + rotation, () -> true);
+        // forward/back (translation), left/right (strafe), target heading in degrees
+        swerveDrive.driveSwerveDriveAndRotateToAngle(speed, 0.0, heading + rotation);
     }
 
     @Override

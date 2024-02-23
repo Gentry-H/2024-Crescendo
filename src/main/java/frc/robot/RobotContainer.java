@@ -6,8 +6,10 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
 
@@ -37,9 +39,6 @@ public class RobotContainer implements Constants.AutoConstants {
     private final CommandXboxController auxDriver = new CommandXboxController(1);
 
     /* Driver Buttons */
-    private final JoystickButton zeroGyro = new JoystickButton(driver.getHID(), XboxController.Button.kY.value);
-    private final JoystickButton robotCentric = new JoystickButton(driver.getHID(), XboxController.Button.kLeftBumper.value);
-
     private final BooleanSupplier cancelAutoRotation = () -> (driver.getRightX() > 0.1 || driver.getRightX() < -0.1);
 
     /* Subsystems */
@@ -60,11 +59,7 @@ public class RobotContainer implements Constants.AutoConstants {
     // prioritize getting notes from center line (over those from starting area)
     private SendableChooser<Boolean> grabFromCenterFirstChooser;
 
-    {
-        // Fire-up the blinkin
-        BlinkinSubsystem.getInstance().setColorMode(BlinkinValues.BLUE);
-
-    }
+    private ShuffleboardTab autonomousTab = Shuffleboard.getTab("Autonomous");
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -85,6 +80,9 @@ public class RobotContainer implements Constants.AutoConstants {
         visionThread.start();
 */
         setupAutoChoosers();
+
+        // Fire up the blinkin
+        BlinkinSubsystem.getInstance().setColorMode(BlinkinValues.BLUE);
     }
 
     /**
@@ -107,31 +105,18 @@ public class RobotContainer implements Constants.AutoConstants {
         notePlayerSubsystem.setDefaultCommand(notePlayerSubsystem.allStop());
 
 //        /* Driver Buttons */
-        //zeroGyro.onTrue(new InstantCommand(swerveDrive::zeroHeading));
-//        driver.povCenter().onFalse(swerveDrive.teleopDriveSwerveDriveAndRotateToAngleCommand(
-//                driver::getLeftY,
-//                driver::getLeftX,
-//                driver::getRightTriggerAxis,
-//                () -> -driver.getHID().getPOV(),
-//                robotCentric
-//                ).until(cancelAutoRotation));
-//
-//        driver.rightStick().toggleOnTrue(swerveDrive.teleopDriveSwerveDriveAndFacePosition(
-//                driver::getLeftY,
-//                driver::getLeftX,
-//                driver::getRightTriggerAxis,
-//                notePlayerSubsystem.getSpeakerCoords().toTranslation2d(),
-//                robotCentric
-//        ).until(cancelAutoRotation));
+//        driver.povCenter().onFalse(Commands.waitSeconds(0.1).andThen(swerveDrive.setHoldHeading(-driver.getHID().getPOV()).until(cancelAutoRotation)));
+
+        driver.rightTrigger(0.75).onTrue(swerveDrive.faceSpeaker().until(cancelAutoRotation));
 
         driver.x().onTrue(new InstantCommand(swerveDrive::xLockWheels));
         driver.start().whileTrue(AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("AlignAmp"), Constants.PathPlannerConstants.pathConstraints));
 
         driver.rightBumper().whileTrue((new FindAndGotoNote(notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake))
                 .alongWith(Commands.waitUntil(RobotState.getInstance()::isNoteIsAvailable).andThen(notePlayerSubsystem.intakeNote())));
-        driver.leftBumper().onTrue(notePlayerSubsystem.feedNoteToShooter().andThen(notePlayerSubsystem.finishShooting()));
-        driver.a().onTrue(notePlayerSubsystem.scoreAmp());
-
+//        driver.leftBumper().onTrue(notePlayerSubsystem.feedNoteToShooter().andThen(notePlayerSubsystem.finishShooting()));
+//        driver.a().onTrue(notePlayerSubsystem.scoreAmp());
+        driver.leftBumper().onTrue(notePlayerSubsystem.scoreNote());
 
         auxDriver.leftBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> 0.15));
         auxDriver.rightBumper().whileTrue(notePlayerSubsystem.driveArmPercent(() -> -0.125));
@@ -201,11 +186,11 @@ public class RobotContainer implements Constants.AutoConstants {
         grabFromCenterFirstChooser.setDefaultOption("GrabFromCenterFirst", true);
         grabFromCenterFirstChooser.addOption("GrabFromStartFirst", false);
 
-        SmartDashboard.putData("Number Of Auto Actions", numOfNotesToScoreChooser);
-        SmartDashboard.putData("Number Of Amp Scores", numOfAmpScoresChooser);
-        SmartDashboard.putData("Autonomous Lane", autoLaneChooser);
-        SmartDashboard.putData("Number Of Notes From Start", numOfNotesFromStartChooser);
-        SmartDashboard.putData("Direction To Search In", directionToSearchInChooser);
-        SmartDashboard.putData("Grab From Where", grabFromCenterFirstChooser);
+        autonomousTab.add("Number Of Auto Actions", numOfNotesToScoreChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
+        autonomousTab.add("Number Of Amp Scores", numOfAmpScoresChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
+        autonomousTab.add("Autonomous Lane", autoLaneChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
+        autonomousTab.add("Number Of Notes From Start", numOfNotesFromStartChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
+        autonomousTab.add("Direction To Search In", directionToSearchInChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
+        autonomousTab.add("Grab From Where", grabFromCenterFirstChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
     }
 }
