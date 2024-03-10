@@ -56,8 +56,6 @@ public class RobotContainer implements Constants.AutoConstants {
     // Sendable Choosers for autonomous
     // total number of notes to score (including in speaker+amp) during auto
     private SendableChooser<Integer> numOfNotesToScoreChooser;
-    // number of notes to score in amp during auto
-    private SendableChooser<Integer> numOfAmpScoresChooser;
     // number of notes to pick up from starting line area
     private SendableChooser<Integer> numOfNotesFromStartChooser;
     // should travel to-from center line go under stage, near amp, or near source
@@ -115,13 +113,12 @@ public class RobotContainer implements Constants.AutoConstants {
         setupAutoChoosers();
 
         autoLastNumOfNotes = numOfNotesToScoreChooser.getSelected();
-        autoLastNumOfAmps = numOfAmpScoresChooser.getSelected();
         autoLastNumOfStartNotes = numOfNotesFromStartChooser.getSelected();
         autoLastAutoLane = autoLaneChooser.getSelected();
         autoLastSearchDirection = directionToSearchInChooser.getSelected();
         autoLastGrabFromCenterFirst = grabFromCenterFirstChooser.getSelected();
 
-        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes, autoLastNumOfAmps,
+        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes,
                 autoLastAutoLane, autoLastNumOfStartNotes, autoLastSearchDirection,
                 autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8));
     }
@@ -220,7 +217,7 @@ public class RobotContainer implements Constants.AutoConstants {
      */
     public Command getAutonomousCommand() {
         return debugPathMode.getBoolean(false) ? AutoBuilder.followPath(PathPlannerPath.fromPathFile(pathToDebug.getString("Sp-StLn-SN2"))) :
-                autoOptionsHaveChanged() ? new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(), numOfAmpScoresChooser.getSelected(),
+                autoOptionsHaveChanged() ? new AutonomousCommandsBuilder(numOfNotesToScoreChooser.getSelected(),
                 autoLaneChooser.getSelected(), numOfNotesFromStartChooser.getSelected(),
                 directionToSearchInChooser.getSelected(), grabFromCenterFirstChooser.getSelected(),
                 notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8))/*.alongWith((Commands.waitSeconds(0.25).andThen(Commands.print("PERIODIC 1/4 SECOND TIME STAMP: " + System.nanoTime()/1E9))))*/
@@ -240,12 +237,6 @@ public class RobotContainer implements Constants.AutoConstants {
         for (int i = 1; i <= 5; i++) {
             numOfNotesToScoreChooser.addOption("" + i, i);
         }
-
-        // Choose how many notes to score in Amp
-        numOfAmpScoresChooser = new SendableChooser<>();
-        numOfAmpScoresChooser.setDefaultOption("0", 0);
-        numOfAmpScoresChooser.addOption("1", 1);
-        numOfAmpScoresChooser.addOption("2", 2);
 
         // Choose which lane the robot should travel in
         autoLaneChooser = new SendableChooser<>();
@@ -273,7 +264,6 @@ public class RobotContainer implements Constants.AutoConstants {
         grabFromCenterFirstChooser.addOption("GrabFromCenterFirst", true);
 
         autonomousTab.add("Number Of Auto Actions", numOfNotesToScoreChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
-        autonomousTab.add("Number Of Amp Scores", numOfAmpScoresChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
         autonomousTab.add("Autonomous Lane", autoLaneChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
         autonomousTab.add("Number Of Notes From Start", numOfNotesFromStartChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
         autonomousTab.add("Direction To Search In", directionToSearchInChooser).withWidget(BuiltInWidgets.kSplitButtonChooser);
@@ -282,17 +272,15 @@ public class RobotContainer implements Constants.AutoConstants {
 
     public boolean autoOptionsHaveChanged() {
         int currentNumOfNotesToScore = numOfNotesToScoreChooser.getSelected();
-        int currentNumOfAmps = numOfAmpScoresChooser.getSelected();
         int currentNumOfNotesFromStart = numOfNotesFromStartChooser.getSelected();
         String currentAutoLane = autoLaneChooser.getSelected();
         String currentSearchDirection = directionToSearchInChooser.getSelected();
         boolean currentGrabFromStartFirst = grabFromCenterFirstChooser.getSelected();
-        if ((currentNumOfNotesToScore != autoLastNumOfNotes) || (currentNumOfAmps != autoLastNumOfAmps) ||
+        if ((currentNumOfNotesToScore != autoLastNumOfNotes) ||
                 (currentNumOfNotesFromStart != autoLastNumOfStartNotes) || (!Objects.equals(currentAutoLane, autoLastAutoLane)) ||
                 (!Objects.equals(currentSearchDirection, autoLastSearchDirection)) || (currentGrabFromStartFirst != autoLastGrabFromCenterFirst)) {
 
             autoLastNumOfNotes = currentNumOfNotesToScore;
-            autoLastNumOfAmps = currentNumOfAmps;
             autoLastNumOfStartNotes = currentNumOfNotesFromStart;
             autoLastAutoLane = currentAutoLane;
             autoLastSearchDirection = currentSearchDirection;
@@ -305,7 +293,7 @@ public class RobotContainer implements Constants.AutoConstants {
     }
 
     public void regenerateAutoCommand() {
-        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes, autoLastNumOfAmps,
+        autoCommand = new AutonomousCommandsBuilder(autoLastNumOfNotes,
                 autoLastAutoLane, autoLastNumOfStartNotes, autoLastSearchDirection,
                 autoLastGrabFromCenterFirst, notePlayerSubsystem, swerveDrive, autoMoveDelay.getDouble(8));
     }

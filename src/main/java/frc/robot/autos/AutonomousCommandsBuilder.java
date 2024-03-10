@@ -32,7 +32,7 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
      * @param searchDirection {@link Integer} Which direction the robot should search in (currently 1 (toward source) or -1 (towards amp), may change)
      * @param grabFromCenterFirst {@link Boolean} Whether to grab
      */
-    public AutonomousCommandsBuilder(int numOfNotesToScore, int numOfAmpScores, String autoLane,
+    public AutonomousCommandsBuilder(int numOfNotesToScore, String autoLane,
                                      int numOfNotesFromStart, String searchDirection, boolean grabFromCenterFirst,
                                      NotePlayerSubsystem notePlayerSubsystem, SwerveDrive swerveDrive, double delay) {
 
@@ -105,55 +105,37 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                                             // Unless all the center notes we wanted are gone
                                             .unless(() -> FieldState.getInstance().isCenterNotesGone())
                             );
-
-                            // Prioritize scoring in the Amp (not sure if we want it this way)
-                            if (i < numOfAmpScores) {
-                                lastScoredIn = "Amp";
-                                addCommands(
-                                        /*new InstantCommand(() -> DataLogManager.log("Path Find To and Following: CL-" + autoLane + "-Amp"))*/Commands.none().andThen(
-                                                notePlayerSubsystem.intakeNote().alongWith(
-                                                        AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("CL-" + autoLane + "-Amp"), pathConstraints)
-                                                                .alongWith(Commands.waitSeconds(0.025).andThen(Commands.waitUntil(notePlayerSubsystem.getIndexer()::noteInIndexer)
-                                                                        .andThen(notePlayerSubsystem.prepForAmp())))),
-                                                Commands.waitSeconds(0.025),
-                                                Commands.waitUntil(notePlayerSubsystem.getArm()::isAtSetPosition),
-                                                notePlayerSubsystem.scoreAmp(),
-                                                notePlayerSubsystem.prepForPickup()
-                                        ).onlyIf(notePlayerSubsystem.getIntake()::noteInIntake)
-                                );
-                            } else {
-                                // Score in the Speaker
-                                lastScoredIn = "Sp";
-                                PathPlannerPath pathToSpeaker = PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp");
-                                double distanceToSpeakerAtEndOfPath = pathToSpeaker.getAllPathPoints().get(pathToSpeaker.getAllPathPoints().size() - 1).position.getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
+                             // Score in the Speaker
+                            lastScoredIn = "Sp";
+                            PathPlannerPath pathToSpeaker = PathPlannerPath.fromPathFile("CL-" + autoLane + "-Sp");
+                            double distanceToSpeakerAtEndOfPath = pathToSpeaker.getAllPathPoints().get(pathToSpeaker.getAllPathPoints().size() - 1).position.getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
 //                            addCommands(new InstantCommand(() -> DataLogManager.log("Path Find To and Following: CL-" + autoLane + "-Sp")));
-                                if (!Objects.equals(autoLane, stageLane)) {
-                                    addCommands(
-//                                        new InstantCommand(() -> swerveDrive.setFaceSpeaker(true)),
-                                            AutoBuilder.buildAuto("CL-" + autoLane + "-Sp"),
-                                            new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
-                                                notePlayerSubsystem.getIndexer().stop();
-//                                                notePlayerSubsystem.getShooter().stop();
-                                            })
-                                    );
-                                } else {
-                                    addCommands(
-                                            new InstantCommand(() -> notePlayerSubsystem.setMoveArmInAuto(true)),
-                                            AutoBuilder.buildAuto("CL-" + autoLane + "-Sp")
-                                    );
-                                }
-
+                            if (!Objects.equals(autoLane, stageLane)) {
                                 addCommands(
-                                        new InstantCommand(() -> RobotState.getInstance().setShooterMode(Constants.GameStateConstants.ShooterMode.SPEAKER)),
-                                        new RunCommand(() -> notePlayerSubsystem.getShooter().spinMetersPerSecond(13))
-                                                .alongWith(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == READY)
-                                                        .andThen(notePlayerSubsystem.scoreNote())),
-                                        notePlayerSubsystem.prepForPickup(),
-                                        new InstantCommand(() -> {
-                                            swerveDrive.setFaceSpeaker(false);
+//                                        new InstantCommand(() -> swerveDrive.setFaceSpeaker(true)),
+                                        AutoBuilder.buildAuto("CL-" + autoLane + "-Sp"),
+                                        new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
+                                            notePlayerSubsystem.getIndexer().stop();
+//                                                notePlayerSubsystem.getShooter().stop();
                                         })
                                 );
+                            } else {
+                                addCommands(
+                                        new InstantCommand(() -> notePlayerSubsystem.setMoveArmInAuto(true)),
+                                        AutoBuilder.buildAuto("CL-" + autoLane + "-Sp")
+                                );
                             }
+
+                            addCommands(
+                                    new InstantCommand(() -> RobotState.getInstance().setShooterMode(Constants.GameStateConstants.ShooterMode.SPEAKER)),
+                                    new RunCommand(() -> notePlayerSubsystem.getShooter().spinMetersPerSecond(13))
+                                            .alongWith(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == READY)
+                                                    .andThen(notePlayerSubsystem.scoreNote())),
+                                    notePlayerSubsystem.prepForPickup(),
+                                    new InstantCommand(() -> {
+                                        swerveDrive.setFaceSpeaker(false);
+                                    })
+                            );
                         } else {
                             // If we aren't supposed to grab from the center, then grab from the start
 //                        DataLogManager.log("Grabbing From Start");
@@ -162,49 +144,31 @@ public class AutonomousCommandsBuilder extends SequentialCommandGroup implements
                                     notePlayerSubsystem.prepForPickup(),
                                     new AutoGrabFromStart(orderOfStartNotes[grabsFromStartAttempted], lastScoredIn, autoLane, notePlayerSubsystem, swerveDrive).until(notePlayerSubsystem.getIntake()::noteInIntake)
                             );
-
-                            // Prioritize scoring in the Amp (not sure if we want it this way)
-                            if (i < numOfAmpScores) {
-                                lastScoredIn = "Amp";
-//                            DataLogManager.log("Shoot Amp");
-                                addCommands(
-                                        /*new AutoLog("Path Find To and Following: SL-" + autoLane + "-Amp")*/Commands.none().andThen(
-                                                notePlayerSubsystem.intakeNote().alongWith(
-                                                        AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("SL-" + autoLane + "-Amp"), pathConstraints)
-                                                                .alongWith(Commands.waitSeconds(0.025).andThen(Commands.waitUntil(notePlayerSubsystem.getIndexer()::noteInIndexer)
-                                                                        .andThen(notePlayerSubsystem.prepForAmp())))),
-                                                Commands.waitSeconds(0.025),
-                                                Commands.waitUntil(notePlayerSubsystem.getArm()::isAtSetPosition),
-                                                notePlayerSubsystem.scoreAmp(),
-                                                notePlayerSubsystem.prepForPickup()
-                                        ).onlyIf(notePlayerSubsystem.getIntake()::noteInIntake));
-                            } else {
-                                // Score in the Speaker
-                                lastScoredIn = "Sp";
+                            // Score in the Speaker
+                            lastScoredIn = "Sp";
 //                            DataLogManager.log("Shoot Speaker");
-                                String pathName = "SN" + orderOfStartNotes[grabsFromStartAttempted] + "-" + autoLane + "-Sp";
-                                PathPlannerPath pathToSpeaker = PathPlannerPath.fromPathFile(pathName);
-                                double distanceToSpeakerAtEndOfPath = pathToSpeaker.getAllPathPoints().get(pathToSpeaker.getAllPathPoints().size() - 1)
-                                        .position.getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
-                                addCommands(
-                                        new InstantCommand(() -> notePlayerSubsystem.setMoveArmInAuto(false)),
-                                        AutoBuilder.buildAuto(pathName),
-                                        //                                            new AutoLog("Finished intaking and following path"),
-                                        new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.65))
-                                                .until(notePlayerSubsystem.getIndexer()::noteInIndexer)
-                                                .unless(notePlayerSubsystem.getIndexer()::noteInIndexer),
-                                        new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
+                            String pathName = "SN" + orderOfStartNotes[grabsFromStartAttempted] + "-" + autoLane + "-Sp";
+                            PathPlannerPath pathToSpeaker = PathPlannerPath.fromPathFile(pathName);
+                            double distanceToSpeakerAtEndOfPath = pathToSpeaker.getAllPathPoints().get(pathToSpeaker.getAllPathPoints().size() - 1)
+                                    .position.getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
+                            addCommands(
+                                    new InstantCommand(() -> notePlayerSubsystem.setMoveArmInAuto(false)),
+                                    AutoBuilder.buildAuto(pathName),
+                                    //                                            new AutoLog("Finished intaking and following path"),
+                                    new RunCommand(() -> notePlayerSubsystem.getIndexer().spin(0.65))
+                                            .until(notePlayerSubsystem.getIndexer()::noteInIndexer)
+                                            .unless(notePlayerSubsystem.getIndexer()::noteInIndexer),
+                                    new AutoScoreInSpeaker(notePlayerSubsystem).finallyDo(() -> {
 //                                            notePlayerSubsystem.getShooter().stop();
-                                            notePlayerSubsystem.getIndexer().stop();
-                                            notePlayerSubsystem.shootFromSubwoofer();
-                                        }),
-                                        notePlayerSubsystem.prepForPickup(),
-                                        new InstantCommand(() -> {
-                                            swerveDrive.setFaceSpeaker(false);
-                                            notePlayerSubsystem.shootFromSubwoofer();
-                                        })
-                                );
-                            }
+                                        notePlayerSubsystem.getIndexer().stop();
+                                        notePlayerSubsystem.shootFromSubwoofer();
+                                    }),
+                                    notePlayerSubsystem.prepForPickup(),
+                                    new InstantCommand(() -> {
+                                        swerveDrive.setFaceSpeaker(false);
+                                        notePlayerSubsystem.shootFromSubwoofer();
+                                    })
+                            );
                             // Keep track of how many times we have tried to get a note from the center
                             grabsFromStartAttempted++;
                         }
