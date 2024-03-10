@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -46,7 +47,9 @@ public class RumbleController extends Command {
 
     @Override
     public void execute() {
-        controller.setRumble(rumbleType, rumbleStrength);
+        if (RobotState.isTeleop()) {
+            controller.setRumble(rumbleType, rumbleStrength);
+        }
     }
 
     @Override
