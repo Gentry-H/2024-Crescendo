@@ -171,8 +171,8 @@ public class RobotContainer implements Constants.AutoConstants {
 
         auxDriver.start().whileTrue(notePlayerSubsystem.stowShot());
 
-        auxDriver.back().onTrue(climberSubsystem.servoOut());
-        auxDriver.back().onFalse(climberSubsystem.servoIn());
+        auxDriver.back().onFalse(climberSubsystem.servoOut());
+        auxDriver.back().onTrue(climberSubsystem.servoIn());
 
         auxDriver.povUp().onTrue(climberSubsystem.prepForClimbCommand());
         auxDriver.povDown().onTrue(climberSubsystem.doClimbClimbCommand());
@@ -208,6 +208,9 @@ public class RobotContainer implements Constants.AutoConstants {
 
         new Trigger(notePlayerSubsystem.getIndexer()::noteInIndexer).onFalse(
                 new RumbleController(auxDriver.getHID(), 0.25));
+
+        new Trigger(() -> (climberSubsystem.getClimberPos() < 2.3 && climberSubsystem.getSetPos() == Constants.ElevatorConstants.ELEVATOR_MOTOR_LOWER_LIMIT_POS  && climberSubsystem.isOnChain()))
+                .whileTrue(climberSubsystem.servoIn());
     }
 
     /**

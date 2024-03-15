@@ -181,7 +181,7 @@ public interface Constants {
         Transform3d ROBOT_TO_TAG_FRONT_RIGHT_CAM_POS =
                 new Transform3d(new Translation3d(Units.inchesToMeters(11.5d), Units.inchesToMeters(-10.7d), Units.inchesToMeters(9.0d)), new Rotation3d(0d, Math.toRadians(-33d), 0/*Math.PI+3.125*/));
         Transform3d ROBOT_TO_TAG_REAR_LEFT_CAM_POS =
-                new Transform3d(new Translation3d(Units.inchesToMeters(-11.5d), Units.inchesToMeters(10.7d), Units.inchesToMeters(10.0d)), new Rotation3d(0d, Math.toRadians(-33d), Math.toRadians(-178)/*3.125*/));
+                new Transform3d(new Translation3d(Units.inchesToMeters(-11.5d), Units.inchesToMeters(10.7d), Units.inchesToMeters(8.3d)), new Rotation3d(0d, Math.toRadians(-33d), Math.toRadians(-178)/*3.125*/));
 
         // The layout of the AprilTags on the field
         AprilTagFieldLayout tagLayout =
