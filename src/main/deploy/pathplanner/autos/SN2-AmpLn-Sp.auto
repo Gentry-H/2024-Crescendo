@@ -16,9 +16,22 @@
                 }
               },
               {
-                "type": "named",
+                "type": "sequential",
                 "data": {
-                  "name": "IntakeNote"
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "IntakeNote"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "PrepArm"
+                      }
+                    }
+                  ]
                 }
               }
             ]

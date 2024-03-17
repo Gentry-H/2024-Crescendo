@@ -32,12 +32,12 @@
     },
     {
       "anchor": {
-        "x": 6.4,
-        "y": 7.445031471942789
+        "x": 6.432463492349465,
+        "y": 7.323071232867272
       },
       "prevControl": {
-        "x": 5.335859035506552,
-        "y": 7.666566880890823
+        "x": 5.368322527856016,
+        "y": 7.544606641815306
       },
       "nextControl": null,
       "isLocked": false,
@@ -54,9 +54,9 @@
     "maxAngularAcceleration": 270.0
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 1.5,
     "rotation": 0,
-    "rotateFast": false
+    "rotateFast": true
   },
   "reversed": false,
   "folder": "Speaker-Other",

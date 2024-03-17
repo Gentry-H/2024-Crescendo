@@ -102,6 +102,7 @@ public class RobotContainer implements Constants.AutoConstants {
         NamedCommands.registerCommand("EndNoteAction", Commands.print("End of the Note Action"));
 
         NamedCommands.registerCommand("IntakeNote", notePlayerSubsystem.intakeNote());
+        NamedCommands.registerCommand("PrepArm", notePlayerSubsystem.autoPrepArmForShooting());
 
         NamedCommands.registerCommand("RaiseArm", notePlayerSubsystem.rotateArmToDegrees(44));
 
@@ -166,8 +167,8 @@ public class RobotContainer implements Constants.AutoConstants {
         auxDriver.a().onTrue(notePlayerSubsystem.prepForPickup());
         auxDriver.y().onTrue(notePlayerSubsystem.prepForAmp());
 
-        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.reverseEject());
-        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.forwardEject());
+        auxDriver.leftBumper().whileTrue(notePlayerSubsystem.reverseEject());
+        auxDriver.rightBumper().whileTrue(notePlayerSubsystem.forwardEject());
 
         auxDriver.start().whileTrue(notePlayerSubsystem.stowShot());
 
@@ -176,7 +177,7 @@ public class RobotContainer implements Constants.AutoConstants {
 
         auxDriver.povUp().onTrue(climberSubsystem.prepForClimbCommand());
         auxDriver.povDown().onTrue(climberSubsystem.doClimbClimbCommand());
-        auxDriver.povLeft().onTrue(new PrepForShooting(swerveDrive, notePlayerSubsystem));
+//        auxDriver.povLeft().onTrue(new PrepForShooting(swerveDrive, notePlayerSubsystem));
         auxDriver.povRight().whileTrue(notePlayerSubsystem.shootFromSubwooferCommand());
 
         auxDriver.rightTrigger().whileTrue(notePlayerSubsystem.intakeNote());

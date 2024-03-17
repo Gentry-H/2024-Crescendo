@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.4964487923161895,
-        "y": 1.7964818160740974
+        "x": 7.354490412711446,
+        "y": 1.161449626678323
       },
       "isLocked": false,
       "linkedName": null
@@ -20,8 +20,8 @@
         "y": 2.42
       },
       "prevControl": {
-        "x": 6.863268628426792,
-        "y": 2.2888931509452166
+        "x": 7.255131634778774,
+        "y": 1.8082521060875463
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,7 +46,7 @@
   "folder": "CenterLine-Other",
   "previewStartingState": {
     "rotation": 0,
-    "velocity": 0
+    "velocity": 1.5
   },
   "useDefaultConstraints": true
 }

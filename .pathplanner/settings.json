@@ -5,6 +5,7 @@
   "pathFolders": [
     "Amp-Other",
     "CenterLine-Other",
+    "New Folder",
     "Speaker-Other",
     "StartingNotes-Other",
     "TeleopPaths"
@@ -23,5 +24,5 @@
   "defaultMaxAccel": 2.8,
   "defaultMaxAngVel": 360.0,
   "defaultMaxAngAccel": 270.0,
-  "maxModuleSpeed": 4.2
+  "maxModuleSpeed": 4.1
 }

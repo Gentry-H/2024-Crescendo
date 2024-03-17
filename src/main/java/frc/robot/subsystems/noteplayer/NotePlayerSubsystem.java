@@ -103,12 +103,14 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
 //        SmartDashboard.putBoolean("LimitSwitchEnabled", indexer.isLimitSwitchEnabled());
 //        SmartDashboard.putBoolean("LimitSwitchPressed", indexer.limitSwitchState());
 
-        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+//        SmartDashboard.putNumber("Angle Interpolator", angleInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 //        SmartDashboard.putBoolean("Arm At Set Position", arm.isAtSetPosition());
 //        SmartDashboard.putBoolean("Shooter At Set Speed", shooter.targetVelocityReached());
-        SmartDashboard.putNumber("Speed Interpolator", speedInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
+//        SmartDashboard.putNumber("Speed Interpolator", speedInterpolator.get(PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d())));
 //        SmartDashboard.putNumber("Top Shooter Speed", shooter.getShooterTopVelocityMPS());
 //        SmartDashboard.putNumber("Bottom Shooter Speed", shooter.getShooterBottomVelocityMPS());
+
+        SmartDashboard.putBoolean("Indexer Has Note", indexer.noteInIndexer());
 
         /**
          * PODIUM ANGLE 27.3
@@ -278,7 +280,7 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     }
 
     public void shootFromSubwoofer() {
-        shooter.spinMetersPerSecond(31, 0.5);//22, 4);
+        shooter.spinMetersPerSecond(26, 4);//22, 4);
     }
 
     public Command shootFromSubwooferCommand() {
@@ -387,6 +389,12 @@ public class NotePlayerSubsystem extends SubsystemBase implements Constants.Note
     public Command rotateArmToDegrees(double degrees) {
         return new InstantCommand(
                 () -> arm.rotateToDegrees(degrees)
+        );
+    }
+
+    public Command autoPrepArmForShooting() {
+        return new InstantCommand(
+                () -> arm.rotateToDegrees(angleInterpolator.get(1.4))
         );
     }
 

@@ -17,9 +17,9 @@ public class AutoScoreInSpeaker extends SequentialCommandGroup {
 //                new AutoLog("Starting Scoring!"),
                 Commands.run(() -> {
                     double distanceToSpeaker = PoseEstimator.getInstance().getPose().getTranslation().getDistance(FieldState.getInstance().getSpeakerCoords().toTranslation2d());
-//                    notePlayerSubsystem.getShooter().spinMetersPerSecond(notePlayerSubsystem.getSpeedInterpolator().get(distanceToSpeaker));
-//                    notePlayerSubsystem.getArm().rotateToDegrees(notePlayerSubsystem.getAngleInterpolator().get(distanceToSpeaker));
-                    notePlayerSubsystem.shootFromSubwoofer();
+                    notePlayerSubsystem.getShooter().spinMetersPerSecond(notePlayerSubsystem.getSpeedInterpolator().get(distanceToSpeaker));
+                    notePlayerSubsystem.getArm().rotateToDegrees(notePlayerSubsystem.getAngleInterpolator().get(distanceToSpeaker));
+//                    notePlayerSubsystem.shootFromSubwoofer();
                         })
                         .alongWith((Commands.waitSeconds(0.06)
                                 .andThen(Commands.waitUntil(() -> RobotState.getInstance().getShooterStatus() == Constants.GameStateConstants.ShooterStatus.READY)))
