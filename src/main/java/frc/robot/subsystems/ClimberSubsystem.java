@@ -51,7 +51,7 @@ public class ClimberSubsystem extends SubsystemBase implements Constants.Elevato
         motor1.clearStickyFaults();
         motor2.clearStickyFaults();
 
-        climberConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        climberConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         climberConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
